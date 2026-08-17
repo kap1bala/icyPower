@@ -3,7 +3,10 @@ package com.kap1bala.icypower.ui.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -63,10 +66,13 @@ fun SettingsScreen(
             )
         },
     ) { innerPadding ->
+        // verticalScroll keeps the page usable once we add more entries
+        // (HA connection, alert rules, quiet hours, data management).
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
         ) {
             SettingsListItem(
                 title = stringResource(R.string.settings_appearance),
@@ -90,6 +96,13 @@ fun SettingsScreen(
  *
  * Pulled out so both `Appearance` and `Cycle devices` use identical antd-style
  * row visuals — avoids drift between rows. ui.md §8.3 governs the layout.
+ *
+ * Modifier note: [ListItem] is a Surface-backed composable. We previously
+ * chained `fillMaxSize()` on it, which inside a plain Column propagates a
+ * vertical Infinity constraint to children. The first row claimed that
+ * Infinity height, the second collapsed to 0 and rendered as a thin line —
+ * effectively invisible. `fillMaxWidth()` keeps the row at content height
+ * while spanning screen width.
  */
 @Composable
 private fun SettingsListItem(
@@ -121,8 +134,9 @@ private fun SettingsListItem(
             )
         },
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     )
 }
+
