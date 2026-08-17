@@ -71,9 +71,12 @@ fun HomeScreen(
         pageCount = { TAB_COUNT },
     )
 
-    // swipe → drive the indicator
+    // swipe → drive the indicator. Only sync AFTER the scroll settles; during
+    // an animation from 0→2 `currentPage` briefly reports 1, and mirroring
+    // that into selectedTab would cancel `animateScrollToPage(2)` mid-flight
+    // and leave the pager stuck at page 1.
     LaunchedEffect(pagerState.currentPage) {
-        if (pagerState.currentPage != selectedTab) {
+        if (!pagerState.isScrollInProgress && pagerState.currentPage != selectedTab) {
             selectedTab = pagerState.currentPage
         }
     }
