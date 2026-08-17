@@ -19,6 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
 
 /**
  * Owns the Home Assistant connection form state and persists changes.
@@ -84,6 +88,7 @@ class HaViewModel(
             _state.value = current.copy(
                 urlError = true,
                 statusMessage = null,
+                errorReason = null,
             )
             return
         }
@@ -91,15 +96,26 @@ class HaViewModel(
             phase = Phase.Testing,
             urlError = false,
             statusMessage = null,
+            errorReason = null,
         )
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { runCatching { haClient.probe() } }
             val phase = _state.value.phase
             if (phase != Phase.Testing) return@launch  // state was reset
-            _state.value = _state.value.copy(
-                phase = Phase.Idle,
-                statusMessage = result.getOrDefault(false).let { ok ->
-                    if (ok) Status.Ok else Status.Failed
+            result.fold(
+                onSuccess = { ok ->
+                    _state.value = _state.value.copy(
+                        phase = Phase.Idle,
+                        statusMessage = if (ok) Status.Ok else Status.Failed,
+                        errorReason = if (ok) null else "✗ Server reachable but /api/states failed",
+                    )
+                },
+                onFailure = { e ->
+                    _state.value = _state.value.copy(
+                        phase = Phase.Idle,
+                        statusMessage = Status.Failed,
+                        errorReason = decodeReason(e),
+                    )
                 },
             )
         }
@@ -165,6 +181,8 @@ data class HaSettingsState(
     val urlError: Boolean = false,
     val phase: Phase = Phase.Idle,
     val statusMessage: Status? = null,
+    /** Human-readable explanation of the most recent probe failure (null if not failed). */
+    val errorReason: String? = null,
 )
 
 enum class Phase { Idle, Testing, Saving }
@@ -175,6 +193,27 @@ enum class Phase { Idle, Testing, Saving }
  * [Status] describes *what was just observed*.
  */
 enum class Status { Ok, Failed, Cleared }
+
+/**
+ * Translate a probe failure into a one-liner that's actionable for a
+ * non-technical user. Order matters — the more specific match wins.
+ *
+ * The canonical case we care about: OkHttp's
+ *   `SSLException: Unable to parse TLS packet header`
+ * means the client tried plain HTTP but the server is speaking HTTPS
+ * (or vice versa). That's almost always the URL scheme being wrong.
+ */
+private fun decodeReason(e: Throwable): String = when (e) {
+    is SSLException -> "协议不匹配 — 客户端发了 HTTP 但服务器是 HTTPS（或反之）。把 URL 改成 https:// 试试（HA 自 2021 默认是 HTTPS）。"
+    is SocketTimeoutException -> "连接超时 — 检查网络是否可达、HA 服务器是否在线。"
+    is UnknownHostException -> "无法解析主机名 — 检查 URL 是否拼写正确。"
+    else -> {
+        // Generic — still useful when the framework bubbles up an
+        // unexpected exception we didn't think to map here.
+        val msg = e.message
+        if (msg.isNullOrBlank()) e::class.simpleName ?: "未知错误" else msg
+    }
+}
 
 /** Walk up a [Context]'s wrapper chain to find the host [Activity]. */
 private tailrec fun Context.findActivity(): Activity? = when (this) {

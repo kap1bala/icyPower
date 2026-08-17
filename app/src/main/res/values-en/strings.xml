@@ -19,6 +19,27 @@
     <string name="home_card_mark_charged">Mark charged</string>
     <string name="home_card_aria_mark_charged">Mark as charged</string>
 
+    <!-- HomeScreen Tab B — Home Assistant devices -->
+    <string name="home_ha_not_configured_title">Home Assistant not configured</string>
+    <string name="home_ha_not_configured_desc">Add the server URL and Long-Lived Access Token in Settings</string>
+    <string name="home_ha_empty_title">No battery devices to monitor</string>
+    <string name="home_ha_empty_desc">Add a battery or battery_level attribute to your sensors in HA</string>
+    <string name="home_ha_error_title">Connection error</string>
+    <string name="home_ha_error_desc">Check the network and your HA server</string>
+    <string name="home_ha_error_retry">Retry</string>
+    <string name="home_ha_unauthorized_title">Invalid token</string>
+    <string name="home_ha_unauthorized_desc">Update the Long-Lived Access Token in Settings</string>
+    <string name="home_ha_unauthorized_action">Open Settings</string>
+    <!-- args: area(String), percent(int), relative(String) -->
+    <string name="home_ha_card_subtitle">%1$s · %2$d%% · %3$s</string>
+    <string name="home_ha_reconnecting">Reconnecting…</string>
+    <string name="home_ha_no_area">No area</string>
+    <string name="home_ha_just_now">just now</string>
+    <!-- args: minutes(int) -->
+    <string name="home_ha_minutes_ago">%1$d minutes ago</string>
+    <!-- args: hours(int) -->
+    <string name="home_ha_hours_ago">%1$d hours ago</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_appearance">Appearance</string>

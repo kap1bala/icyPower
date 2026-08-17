@@ -1,6 +1,6 @@
 package com.kap1bala.icypower.ui.home
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -19,12 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import com.kap1bala.icypower.R
-import com.kap1bala.icypower.ui.theme.LocalSpacing
 import kotlinx.coroutines.launch
 
 private const val TAB_OVERVIEW = 0
@@ -134,25 +131,12 @@ fun HomeScreen(
                     TAB_CYCLE -> HomeCycleDevicesPanel(
                         onOpenSettings = onOpenSettings,
                     )
-                    TAB_HA -> EmptyHaPanel(modifier = Modifier.fillMaxSize())
+                    TAB_HA -> HomeHaPanel(
+                        onOpenSettings = onOpenSettings,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun EmptyHaPanel(modifier: Modifier = Modifier) {
-    val spacing = LocalSpacing.current
-    Box(
-        modifier = modifier.padding(horizontal = spacing.lg),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.home_empty_ha),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
     }
 }

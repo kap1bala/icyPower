@@ -20,7 +20,16 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.IcyPower">
+        android:theme="@style/Theme.IcyPower"
+        android:usesCleartextTraffic="true">
+        <!--
+            HA in v1 connects over plain HTTP to LAN servers
+            (http://192.168.x.x:8123 etc.). Android 9+ blocks cleartext
+            by default, so we permit it app-wide here. A future iteration
+            should swap this for `android:networkSecurityConfig` with an
+            explicit LAN / .local allowlist — but for a single-developer
+            v1 the global flag is the lowest-friction answer.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

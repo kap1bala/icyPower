@@ -19,6 +19,27 @@
     <string name="home_card_mark_charged">已充电</string>
     <string name="home_card_aria_mark_charged">标记已充电</string>
 
+    <!-- HomeScreen Tab B — Home Assistant 设备 -->
+    <string name="home_ha_not_configured_title">未配置 Home Assistant</string>
+    <string name="home_ha_not_configured_desc">在设置里填服务器 URL 与 Long-Lived Access Token</string>
+    <string name="home_ha_empty_title">没有可监控的电池设备</string>
+    <string name="home_ha_empty_desc">在 HA 中给传感器加上 battery 或 battery_level 属性</string>
+    <string name="home_ha_error_title">连接出错</string>
+    <string name="home_ha_error_desc">检查网络与 HA 服务器状态</string>
+    <string name="home_ha_error_retry">重试</string>
+    <string name="home_ha_unauthorized_title">Token 无效</string>
+    <string name="home_ha_unauthorized_desc">在设置里更新 Long-Lived Access Token</string>
+    <string name="home_ha_unauthorized_action">去设置</string>
+    <!-- args: area(String), percent(int), relative(String) -->
+    <string name="home_ha_card_subtitle">%1$s · %2$d%% · %3$s</string>
+    <string name="home_ha_reconnecting">重新连接中…</string>
+    <string name="home_ha_no_area">无房间</string>
+    <string name="home_ha_just_now">刚刚</string>
+    <!-- args: minutes(int) -->
+    <string name="home_ha_minutes_ago">%1$d 分钟前</string>
+    <!-- args: hours(int) -->
+    <string name="home_ha_hours_ago">%1$d 小时前</string>
+
     <!-- 设置 -->
     <string name="settings_title">设置</string>
     <string name="settings_appearance">外观</string>

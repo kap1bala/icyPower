@@ -11,6 +11,7 @@ import com.kap1bala.icypower.data.ha.NoOpHaClient
 import com.kap1bala.icypower.data.ha.OkHttpHaClient
 import com.kap1bala.icypower.data.i18n.AppLocale
 import com.kap1bala.icypower.data.i18n.LocalePreferences
+import com.kap1bala.icypower.data.preferences.HaMonitorPreferences
 import com.kap1bala.icypower.data.preferences.HaPreferences
 import com.kap1bala.icypower.data.preferences.ThemePreferences
 import com.kap1bala.icypower.data.security.EncryptedSecureStorage
@@ -66,6 +67,11 @@ class IcyPowerApp : Application() {
     /** Plain-text HA connection settings (base URL). Token still lives in [secureStorage]. */
     val haPreferences: HaPreferences by lazy {
         HaPreferences(applicationContext.icyPowerDataStore)
+    }
+
+    /** Battery monitor thresholds (warning / danger, percent). */
+    val haMonitorPreferences: HaMonitorPreferences by lazy {
+        HaMonitorPreferences(applicationContext.icyPowerDataStore)
     }
 
     /** User-chosen display locale (System / Chinese / English). */

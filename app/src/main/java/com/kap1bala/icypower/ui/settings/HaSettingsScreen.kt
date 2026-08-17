@@ -162,7 +162,8 @@ fun HaSettingsScreen(
             state.statusMessage?.let { status ->
                 val (text, color) = when (status) {
                     Status.Ok -> stringResource(R.string.ha_status_ok) to LocalSuccess.current
-                    Status.Failed -> stringResource(R.string.ha_status_failed) to LocalDanger.current
+                    Status.Failed -> (state.errorReason
+                        ?: stringResource(R.string.ha_status_failed)) to LocalDanger.current
                     Status.Cleared -> stringResource(R.string.ha_button_clear) to LocalSuccess.current
                 }
                 Text(
