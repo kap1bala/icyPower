@@ -8,6 +8,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kap1bala.icypower.IcyPowerApp
 import com.kap1bala.icypower.data.cycle.CycleDeviceRepository
 import com.kap1bala.icypower.data.cycle.CycleDeviceState
+import com.kap1bala.icypower.data.cycle.CycleOverview
+import com.kap1bala.icypower.data.cycle.computeOverview
+import com.kap1bala.icypower.data.cycle.epochDayOf
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -21,14 +24,22 @@ import kotlinx.coroutines.launch
  * Sort rule (feat.md §2.1 Tab A):
  *   - Severest first (Danger → Warning → None)
  *   - Within the same severity, most overdue first (largest daysSinceLastCharge)
+ *
+ * Also derives a [CycleOverview] for the home screen's "概览" tab — computed
+ * from the same [devices] StateFlow so there's exactly one subscription to
+ * the underlying DataStore (`repo.devices`).
+ *
+ * @param clock Returns "now" in epoch millis. Default [System.currentTimeMillis];
+ *              injectable so unit tests can pin time.
  */
 class CycleDeviceListViewModel(
     private val repo: CycleDeviceRepository,
+    private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
 
     val devices: StateFlow<List<CycleDeviceState>> = repo.devices
         .map { list ->
-            val now = System.currentTimeMillis()
+            val now = clock()
             list.map { CycleDeviceState.from(it, now) }
                 .sortedWith(
                     compareByDescending<CycleDeviceState> { it.severity.ordinal }
@@ -39,6 +50,21 @@ class CycleDeviceListViewModel(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList(),
+        )
+
+    /**
+     * Aggregated dashboard data for the overview tab.
+     *
+     * Recomputed whenever [devices] emits. `today` is captured once per emit
+     * so all devices within a single aggregation see the same instant — no
+     * race between the first and last device's classification.
+     */
+    val overview: StateFlow<CycleOverview> = devices
+        .map { states -> computeOverview(states, epochDayOf(clock())) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = CycleOverview.EMPTY,
         )
 
     /** Invoked by the home card's "已充电" button. */

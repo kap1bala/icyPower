@@ -30,16 +30,17 @@ import androidx.compose.ui.text.style.TextAlign
 import com.kap1bala.icypower.R
 import com.kap1bala.icypower.ui.theme.LocalSpacing
 
-private const val TAB_CYCLE = 0
-private const val TAB_HA = 1
-private const val TAB_COUNT = 2
+private const val TAB_OVERVIEW = 0
+private const val TAB_CYCLE = 1
+private const val TAB_HA = 2
+private const val TAB_COUNT = 3
 
 /**
  * Home screen — TopAppBar + swipeable TabRow + per-tab panel.
  *
  * Tab state model:
  *   - [selectedTab] is the source of truth for the TabRow.
- *   - [pagerState] drives a [HorizontalPager] that hosts the two panels.
+ *   - [pagerState] drives a [HorizontalPager] that hosts the three panels.
  *   - The two are bidirectionally synced via [LaunchedEffect] — swiping
  *     the pager updates `selectedTab`; tapping a Tab animates the pager
  *     to that page.
@@ -51,10 +52,9 @@ private const val TAB_COUNT = 2
  *   - The pager pages render full-bleed — they must NOT re-apply
  *     `innerPadding` (we hit that bug earlier; see commit 800ca96).
  *
- * - Page 0 "周期设备": [HomeCycleDevicesPanel] — wires to
- *   [com.kap1bala.icypower.ui.cycle.CycleDeviceListViewModel] (single
- *   DataStore-backed source of truth shared with the settings list).
- * - Page 1 "HA 设备": still a no-op placeholder. The real HA client
+ * - Tab 0 "概览" ([HomeOverviewPanel]): stats strip + month calendar (read-only).
+ * - Tab 1 "周期设备" ([HomeCycleDevicesPanel]): per-device cards with "已充电" action.
+ * - Tab 2 "HA 设备": still a no-op placeholder. The real HA client
  *   (OkHttp REST + WS per `prompts/ha.md`) is wired in IcyPowerApp
  *   but the UI layer for it is planned for the next PR.
  */
@@ -64,7 +64,7 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(TAB_CYCLE) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(TAB_OVERVIEW) }
 
     val pagerState = rememberPagerState(
         initialPage = selectedTab.coerceIn(0, TAB_COUNT - 1),
@@ -107,6 +107,11 @@ fun HomeScreen(
         ) {
             PrimaryTabRow(selectedTabIndex = selectedTab) {
                 Tab(
+                    selected = selectedTab == TAB_OVERVIEW,
+                    onClick = { selectedTab = TAB_OVERVIEW },
+                    text = { Text(stringResource(R.string.tab_overview)) },
+                )
+                Tab(
                     selected = selectedTab == TAB_CYCLE,
                     onClick = { selectedTab = TAB_CYCLE },
                     text = { Text(stringResource(R.string.tab_cycle_devices)) },
@@ -128,6 +133,10 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
             ) { page ->
                 when (page) {
+                    TAB_OVERVIEW -> HomeOverviewPanel(
+                        onOpenSettings = onOpenSettings,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                     TAB_CYCLE -> HomeCycleDevicesPanel(
                         onOpenSettings = onOpenSettings,
                     )

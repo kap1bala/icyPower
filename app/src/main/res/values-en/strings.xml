@@ -7,6 +7,7 @@
     <string name="nav_appearance">Appearance</string>
 
     <!-- Tabs -->
+    <string name="tab_overview">Overview</string>
     <string name="tab_cycle_devices">Cycle devices</string>
     <string name="tab_ha_devices">HA devices</string>
 
@@ -81,4 +82,14 @@
     <string name="cycle_ok">OK</string>
     <!-- Inline form errors live in code; if you want them localizable later,
          promote to named strings and translate here too. -->
+
+    <!-- Overview tab -->
+    <string name="cycle_overview_overdue_today">Overdue today</string>
+    <string name="cycle_overview_due_tomorrow">Due tomorrow</string>
+    <string name="cycle_overview_due_7">Due in 7 days</string>
+    <string name="cycle_overview_due_30">Due in 30 days</string>
+    <string name="cycle_overview_empty">No cycle devices yet. Stats will appear here once you add some.</string>
+    <string name="cycle_calendar_prev">Previous month</string>
+    <string name="cycle_calendar_next">Next month</string>
+    <string name="cycle_calendar_jump_today">Jump to today</string>
 </resources>

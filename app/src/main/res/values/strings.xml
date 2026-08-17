@@ -7,6 +7,7 @@
     <string name="nav_appearance">外观</string>
 
     <!-- Tab -->
+    <string name="tab_overview">概览</string>
     <string name="tab_cycle_devices">周期设备</string>
     <string name="tab_ha_devices">HA 设备</string>
 
@@ -80,4 +81,14 @@
     <string name="cycle_cancel">取消</string>
     <string name="cycle_ok">确定</string>
     <!-- 表单内联错误（内部直接写中文，避免重复字符串条目） -->
+
+    <!-- 概览 Tab -->
+    <string name="cycle_overview_overdue_today">今日已超期</string>
+    <string name="cycle_overview_due_tomorrow">明天需充电</string>
+    <string name="cycle_overview_due_7">未来 7 天需充电</string>
+    <string name="cycle_overview_due_30">未来 30 天需充电</string>
+    <string name="cycle_overview_empty">暂无周期设备，添加后将在此显示统计</string>
+    <string name="cycle_calendar_prev">上个月</string>
+    <string name="cycle_calendar_next">下个月</string>
+    <string name="cycle_calendar_jump_today">跳转到今天</string>
 </resources>
