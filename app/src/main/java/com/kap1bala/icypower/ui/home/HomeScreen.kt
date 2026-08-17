@@ -119,6 +119,12 @@ fun HomeScreen(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
+                // Compose 1 page on either side of the current one. The default
+                // of 0 means the next tab is composed *during* the swipe, which
+                // shows up as a one-frame stall on first contact. With 1 neighbor
+                // pre-composed, swipe is a true cross-fade between two existing
+                // trees. Memory cost is trivial (3 small panels, ~10 KB each).
+                beyondViewportPageCount = 1,
             ) { page ->
                 when (page) {
                     TAB_OVERVIEW -> HomeOverviewPanel(

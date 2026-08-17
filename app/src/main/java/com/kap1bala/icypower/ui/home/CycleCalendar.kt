@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,7 +60,8 @@ import java.util.Calendar
  *      we don't use `LazyVerticalGrid` here.
  *
  * Visual contract for each cell (`DayCell`):
- *   - leading/trailing padding cells: blank, same min-height (aspectRatio 1f).
+ *   - leading/trailing padding cells: blank, fillMaxSize (square via the
+ *     outer grid's aspectRatio(7/6)).
  *   - today: day number wrapped in `primary-soft` circle (so the user can spot "now" at a glance).
  *   - any device summary → dot below the number, colored by severity (red = danger/overdue, yellow = upcoming).
  *   - upcomingCount > 1 → count overlay next to the dot.
@@ -194,7 +197,15 @@ private fun WeekdayHeader() {
  *   measures items with `Constraints.Infinity` height, and the inner grid's
  *   subcompose fails. Crashes the app at first composition.
  *   For a fixed 42-cell surface a plain `Column { Row { 7 cells } } × 6`
- *   measures cleanly and is cheap.
+ *   measures cleanly.
+ *
+ * **Why one `aspectRatio(7/6)` on the outer Column, none per-cell?**
+ *   Putting `aspectRatio(1f)` on each of the 42 cells forces 42 separate
+ *   measure passes per layout — slow on a tab-swap. Instead, derive the
+ *   whole grid's height from its width in a single pass: aspectRatio(7/6)
+ *   gives `height = width * 6/7`, then 6 equally-weighted Rows split that
+ *   height, and 7 equally-weighted Boxes per Row split the row width. Each
+ *   cell becomes (W/7, W/7) — a perfect square — without re-measuring.
  */
 @Composable
 private fun DayGrid(
@@ -203,34 +214,43 @@ private fun DayGrid(
     today: Long,
     calendar: Map<Long, CycleDaySummary>,
 ) {
-    val firstDow = firstDayOfWeek()              // 1..7
-    val firstDay = epochDayOfFirstOfMonth(year, month)
-    val lastDay = epochDayOfLastOfMonth(year, month)
-
-    // Calendar day-of-week for the 1st of month (1..7, Sun=1..Sat=7).
-    val (y0, m0, d0) = calendarDayOf(firstDay)
-    val firstDowOfMonth = remember(y0, m0, d0) {
+    // Memoize the structural arithmetic — these are recomputed on every
+    // recomposition otherwise, and `calendarDayOf` allocates a Calendar +
+    // does a millis roundtrip per call.
+    val firstDow = remember { firstDayOfWeek() }
+    val gridLayout = remember(year, month) {
+        val firstDay = epochDayOfFirstOfMonth(year, month)
+        val lastDay = epochDayOfLastOfMonth(year, month)
+        val (y0, m0, d0) = calendarDayOf(firstDay)
         val cal = Calendar.getInstance().apply {
-            clear()                              // zero out hour/min/sec/ms
+            clear()
             set(y0, m0 - 1, d0)
         }
-        cal.get(Calendar.DAY_OF_WEEK)
+        val firstDowOfMonth = cal.get(Calendar.DAY_OF_WEEK)
+        val leadingEmpty = ((firstDowOfMonth - firstDow) + 7) % 7
+        GridLayout(firstDay = firstDay, lastDay = lastDay, leadingEmpty = leadingEmpty)
     }
-    val leadingEmpty = ((firstDowOfMonth - firstDow) + 7) % 7
-    val totalCells = 42
-    val rows = totalCells / 7
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        for (rowIdx in 0 until rows) {
-            Row(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .aspectRatio(7f / 6f)
+    ) {
+        for (rowIdx in 0 until 6) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+            ) {
                 for (colIdx in 0 until 7) {
                     val idx = rowIdx * 7 + colIdx
-                    val dayOffset = idx - leadingEmpty
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (dayOffset < 0 || firstDay + dayOffset > lastDay) {
+                    val dayOffset = idx - gridLayout.leadingEmpty
+                    Box(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                    ) {
+                        if (dayOffset < 0 || gridLayout.firstDay + dayOffset > gridLayout.lastDay) {
                             BlankDayCell()
                         } else {
-                            val day = firstDay + dayOffset
+                            val day = gridLayout.firstDay + dayOffset
                             DayCell(
                                 day = day,
                                 isToday = day == today,
@@ -244,13 +264,15 @@ private fun DayGrid(
     }
 }
 
+private data class GridLayout(
+    val firstDay: Long,
+    val lastDay: Long,
+    val leadingEmpty: Int,
+)
+
 @Composable
 private fun BlankDayCell() {
-    Box(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .fillMaxWidth(),
-    )
+    Box(modifier = Modifier.fillMaxSize())
 }
 
 /**
@@ -273,10 +295,12 @@ private fun DayCell(
     val (_, _, dayOfMonth) = calendarDayOf(day)
 
     val spacing = LocalSpacing.current
+    // Size comes from the parent Box (already a perfect square via the
+    // outer Column's aspectRatio(7/6) and the cell's weight/fillMaxHeight
+    // chain). No aspectRatio here — that would trigger a per-cell measure
+    // pass and add up across the 42 cells.
     Box(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Column(
