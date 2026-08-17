@@ -1,7 +1,6 @@
 package com.kap1bala.icypower.ui.home
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -24,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.kap1bala.icypower.R
 
 private const val TAB_CYCLE = 0
@@ -32,6 +30,15 @@ private const val TAB_HA = 1
 
 /**
  * Home screen — TopAppBar + TabRow + per-tab panel.
+ *
+ * Padding strategy:
+ *   - The outer [Column] consumes [Scaffold]'s `innerPadding` so the TabRow
+ *     sits flush under the TopAppBar and the Box doesn't extend past the
+ *     gesture / navigation bar.
+ *   - Inside the Box, panels render full-bleed. They must **not** re-apply
+ *     `innerPadding` — that was the source of a duplicate top-spacing bug
+ *     where the first cycle-device card had a TopAppBar-height sized gap
+ *     above it.
  *
  * - Tab A "周期设备": [HomeCycleDevicesPanel] — wires to [com.kap1bala.icypower.ui.cycle.CycleDeviceListViewModel]
  *   (shared with the settings-list screen; same DataStore, one truth).
@@ -88,11 +95,9 @@ fun HomeScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 when (selectedTab) {
                     TAB_CYCLE -> HomeCycleDevicesPanel(
-                        contentPadding = innerPadding,
                         onOpenSettings = onOpenSettings,
                     )
                     TAB_HA -> EmptyHaPanel(
-                        contentPadding = innerPadding,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -102,12 +107,9 @@ fun HomeScreen(
 }
 
 @Composable
-private fun EmptyHaPanel(
-    contentPadding: PaddingValues,
-    modifier: Modifier = Modifier,
-) {
+private fun EmptyHaPanel(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.padding(contentPadding),
+        modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
         Text(

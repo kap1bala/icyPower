@@ -57,12 +57,19 @@ import com.kap1bala.icypower.ui.theme.LocalWarning
  * Empty state uses an [Empty]-style column with a primary CTA pointing
  * to the settings screen (ui.md §8.5: optimistic guidance + clear action).
  *
+ * Padding contract:
+ *   - This panel does NOT receive `Scaffold.innerPadding`. The hosting
+ *     [HomeScreen] consumes it via `Column.padding(innerPadding)` so
+ *     tabs sit flush under the TopAppBar. The panel then adds its own
+ *     design spacing (`spacing.md` to the top of the first card, etc.).
+ *   - We do honor the system gesture-bar inset through `contentPadding`
+ *     on the bottom of the list, so the last card isn't eaten by it.
+ *
  * Reuses [CycleDeviceListViewModel] (also used by the settings list) so
  * the DataStore-backed list renders identically and stays in sync.
  */
 @Composable
 fun HomeCycleDevicesPanel(
-    contentPadding: PaddingValues,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CycleDeviceListViewModel = viewModel(factory = CycleDeviceListViewModel.Factory),
@@ -72,9 +79,7 @@ fun HomeCycleDevicesPanel(
 
     if (devices.isEmpty()) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(contentPadding),
+            modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Column(
@@ -96,11 +101,14 @@ fun HomeCycleDevicesPanel(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
+        // The hosting HomeScreen Column already consumed Scaffold.innerPadding
+        // (top + bottom system insets) — so the list can render full-bleed
+        // and only needs its own design rhythm.
         contentPadding = PaddingValues(
             start = spacing.md,
             end = spacing.md,
-            top = contentPadding.calculateTopPadding() + spacing.md,
-            bottom = contentPadding.calculateBottomPadding() + spacing.xl,
+            top = spacing.md,
+            bottom = spacing.xl,
         ),
         verticalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
