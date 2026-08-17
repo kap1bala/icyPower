@@ -18,17 +18,14 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.kap1bala.icypower.R
 import com.kap1bala.icypower.ui.theme.LocalSpacing
+import kotlinx.coroutines.launch
 
 private const val TAB_OVERVIEW = 0
 private const val TAB_CYCLE = 1
@@ -38,12 +35,20 @@ private const val TAB_COUNT = 3
 /**
  * Home screen — TopAppBar + swipeable TabRow + per-tab panel.
  *
- * Tab state model:
- *   - [selectedTab] is the source of truth for the TabRow.
- *   - [pagerState] drives a [HorizontalPager] that hosts the three panels.
- *   - The two are bidirectionally synced via [LaunchedEffect] — swiping
- *     the pager updates `selectedTab`; tapping a Tab animates the pager
- *     to that page.
+ * **Single source of truth: `pagerState.currentPage`.**
+ * The indicator binds directly to `pagerState.currentPage` (which reports
+ * the last-visible page during scroll, so the indicator follows the
+ * finger). Tab taps launch `pagerState.animateScrollToPage(target)` in a
+ * coroutine scope — no separate `selectedTab` state, no bidirectional
+ * sync, no feedback loop.
+ *
+ * Why not a separate `selectedTab` state?
+ *   - Two `LaunchedEffect`s keeping `selectedTab` and `pagerState.currentPage`
+ *     in sync fight each other: tap → `animateScrollToPage` starts → its
+ *     intermediate `currentPage` reports mirror back into `selectedTab`,
+ *     the second effect re-fires and cancels the animation mid-flight.
+ *   - `pagerState` is `rememberSaveable` natively, so config changes still
+ *     restore the last-visible tab.
  *
  * Padding strategy:
  *   - The outer [Column] consumes [Scaffold]'s `innerPadding` so the TabRow
@@ -64,28 +69,8 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(TAB_OVERVIEW) }
-
-    val pagerState = rememberPagerState(
-        initialPage = selectedTab.coerceIn(0, TAB_COUNT - 1),
-        pageCount = { TAB_COUNT },
-    )
-
-    // swipe → drive the indicator. Only sync AFTER the scroll settles; during
-    // an animation from 0→2 `currentPage` briefly reports 1, and mirroring
-    // that into selectedTab would cancel `animateScrollToPage(2)` mid-flight
-    // and leave the pager stuck at page 1.
-    LaunchedEffect(pagerState.currentPage) {
-        if (!pagerState.isScrollInProgress && pagerState.currentPage != selectedTab) {
-            selectedTab = pagerState.currentPage
-        }
-    }
-    // tap a tab → animate the pager; guard against feedback loops
-    LaunchedEffect(selectedTab) {
-        if (!pagerState.isScrollInProgress && pagerState.currentPage != selectedTab) {
-            pagerState.animateScrollToPage(selectedTab)
-        }
-    }
+    val pagerState = rememberPagerState(pageCount = { TAB_COUNT })
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -108,20 +93,20 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            PrimaryTabRow(selectedTabIndex = selectedTab) {
+            PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
                 Tab(
-                    selected = selectedTab == TAB_OVERVIEW,
-                    onClick = { selectedTab = TAB_OVERVIEW },
+                    selected = pagerState.currentPage == TAB_OVERVIEW,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(TAB_OVERVIEW) } },
                     text = { Text(stringResource(R.string.tab_overview)) },
                 )
                 Tab(
-                    selected = selectedTab == TAB_CYCLE,
-                    onClick = { selectedTab = TAB_CYCLE },
+                    selected = pagerState.currentPage == TAB_CYCLE,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(TAB_CYCLE) } },
                     text = { Text(stringResource(R.string.tab_cycle_devices)) },
                 )
                 Tab(
-                    selected = selectedTab == TAB_HA,
-                    onClick = { selectedTab = TAB_HA },
+                    selected = pagerState.currentPage == TAB_HA,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(TAB_HA) } },
                     text = { Text(stringResource(R.string.tab_ha_devices)) },
                 )
             }
