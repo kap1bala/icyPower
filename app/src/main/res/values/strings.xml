@@ -24,6 +24,17 @@
     <string name="settings_appearance_subtitle">主题模式：跟随系统 / 亮色 / 暗色</string>
     <string name="settings_cycle_devices">周期设备</string>
     <string name="settings_cycle_devices_subtitle">手动登记、定期充电提醒</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_subtitle">应用显示语言</string>
+
+    <!-- 语言 -->
+    <string name="language_title">语言</string>
+    <string name="language_option_system">跟随系统</string>
+    <string name="language_option_system_desc">使用设备的系统语言</string>
+    <string name="language_option_zh">简体中文</string>
+    <string name="language_option_zh_desc">使用简体中文</string>
+    <string name="language_option_en">English</string>
+    <string name="language_option_en_desc">Use English</string>
 
     <!-- 外观 -->
     <string name="appearance_title">外观</string>
@@ -47,6 +58,11 @@
     <string name="cycle_row_meta">每 %1$d 天充一次 · %2$s（%3$s）</string>
     <string name="cycle_badge_warning">已超期</string>
     <string name="cycle_badge_danger">严重超期</string>
+    <!-- 距上次充电相对时间：本地化字符串，供 formatRelativeDays() 使用 -->
+    <string name="cycle_rel_today">今天</string>
+    <string name="cycle_rel_one_day_ago">1 天前</string>
+    <!-- args: days(int) -->
+    <string name="cycle_rel_days_ago">%1$d 天前</string>
 
     <!-- 周期设备编辑 -->
     <string name="cycle_edit_title_new">新增周期设备</string>

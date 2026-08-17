@@ -14,6 +14,7 @@ object Destinations {
     const val APPEARANCE = "settings/appearance"
     const val SETTINGS_CYCLE = "settings/cycle"
     const val SETTINGS_CYCLE_EDIT = "settings/cycle/edit"
+    const val SETTINGS_LANGUAGE = "settings/language"
 
     /** Argument key for the optional device id on the edit route. */
     const val ARG_CYCLE_DEVICE_ID = "id"

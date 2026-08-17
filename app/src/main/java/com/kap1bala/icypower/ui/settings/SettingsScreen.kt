@@ -38,6 +38,7 @@ import com.kap1bala.icypower.R
  * Currently exposes:
  *   - Appearance (theme mode picker)
  *   - Cycle devices (manual charge-cycle tracking)
+ *   - Language (display locale)
  *
  * More entries (HA connection, alert rules, quiet hours, data management)
  * will land here in their own PRs — see feat.md §2.
@@ -48,6 +49,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenAppearance: () -> Unit,
     onOpenCycleDevices: () -> Unit,
+    onOpenLanguage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -85,6 +87,13 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_cycle_devices),
                 subtitle = stringResource(R.string.settings_cycle_devices_subtitle),
                 onClick = onOpenCycleDevices,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            SettingsListItem(
+                title = stringResource(R.string.settings_language),
+                subtitle = stringResource(R.string.settings_language_subtitle),
+                onClick = onOpenLanguage,
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }

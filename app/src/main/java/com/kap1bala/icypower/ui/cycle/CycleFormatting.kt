@@ -1,5 +1,8 @@
 package com.kap1bala.icypower.ui.cycle
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.kap1bala.icypower.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -15,10 +18,25 @@ import java.util.Locale
  * "yyyy-MM-dd HH:mm" format intentionally — that's defined on
  * [com.kap1bala.icypower.ui.cycle.CycleDeviceEditViewModel] itself.
  */
+
+/**
+ * "今天" / "Yesterday" / "N 天前" — locale-aware string for the
+ * days-since-last-charge tagline.
+ *
+ * Composable so it can pull from `R.string.*`; `days` is a `Long` because
+ * [CycleDeviceState.daysSinceLastCharge] is computed from epoch millis and
+ * can be negative in pathological (clock-skewed) cases.
+ *
+ * Negative or zero → "今天" / "Today".
+ * Exactly one      → "1 天前" / "1 day ago" (keeps the visual rhythm of
+ *                    the original wording — not "Yesterday").
+ * Greater than one → "%1$d 天前" / "%1$d days ago".
+ */
+@Composable
 internal fun formatRelativeDays(days: Long): String = when {
-    days <= 0 -> "今天"
-    days == 1L -> "1 天前"
-    else -> "$days 天前"
+    days <= 0 -> stringResource(R.string.cycle_rel_today)
+    days == 1L -> stringResource(R.string.cycle_rel_one_day_ago)
+    else -> stringResource(R.string.cycle_rel_days_ago, days)
 }
 
 private val displayDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

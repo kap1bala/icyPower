@@ -11,6 +11,7 @@ import com.kap1bala.icypower.ui.cycle.CycleDeviceEditScreen
 import com.kap1bala.icypower.ui.cycle.CycleDeviceListScreen
 import com.kap1bala.icypower.ui.home.HomeScreen
 import com.kap1bala.icypower.ui.settings.AppearanceScreen
+import com.kap1bala.icypower.ui.settings.LanguageScreen
 import com.kap1bala.icypower.ui.settings.SettingsScreen
 
 /**
@@ -45,11 +46,20 @@ fun IcyPowerNavHost(
                 onOpenCycleDevices = {
                     navController.navigate(Destinations.SETTINGS_CYCLE)
                 },
+                onOpenLanguage = {
+                    navController.navigate(Destinations.SETTINGS_LANGUAGE)
+                },
             )
         }
 
         composable(Destinations.APPEARANCE) {
             AppearanceScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Destinations.SETTINGS_LANGUAGE) {
+            LanguageScreen(
                 onBack = { navController.popBackStack() },
             )
         }

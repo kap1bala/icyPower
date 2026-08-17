@@ -9,6 +9,8 @@ import com.kap1bala.icypower.data.cycle.CycleDeviceRepository
 import com.kap1bala.icypower.data.ha.HaClient
 import com.kap1bala.icypower.data.ha.NoOpHaClient
 import com.kap1bala.icypower.data.ha.OkHttpHaClient
+import com.kap1bala.icypower.data.i18n.AppLocale
+import com.kap1bala.icypower.data.i18n.LocalePreferences
 import com.kap1bala.icypower.data.preferences.HaPreferences
 import com.kap1bala.icypower.data.preferences.ThemePreferences
 import com.kap1bala.icypower.data.security.EncryptedSecureStorage
@@ -66,6 +68,11 @@ class IcyPowerApp : Application() {
         HaPreferences(applicationContext.icyPowerDataStore)
     }
 
+    /** User-chosen display locale (System / Chinese / English). */
+    val localePreferences: LocalePreferences by lazy {
+        LocalePreferences(applicationContext.icyPowerDataStore)
+    }
+
     /**
      * v1 HA client. Returns [OkHttpHaClient] iff both [HaPreferences.baseUrl]
      * and [SecureStorage.getToken] have non-blank values; [NoOpHaClient] otherwise.
@@ -97,6 +104,15 @@ class IcyPowerApp : Application() {
     /** Repository for user-tracked charge-cycle devices. */
     val cycleDeviceRepository: CycleDeviceRepository by lazy {
         CycleDeviceRepository(applicationContext.icyPowerDataStore)
+    }
+
+    /**
+     * Synchronous one-shot read of the persisted [AppLocale], used by
+     * [com.kap1bala.icypower.MainActivity.attachBaseContext] which cannot
+     * suspend. Bounded by the `runBlocking` that already gates [haClient].
+     */
+    fun initialLocale(): AppLocale = runBlocking {
+        AppLocale.fromTag(localePreferences.tag.first())
     }
 
     override fun onCreate() {

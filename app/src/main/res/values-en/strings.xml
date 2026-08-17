@@ -1,0 +1,84 @@
+<resources>
+    <string name="app_name">icyPower</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_appearance">Appearance</string>
+
+    <!-- Tabs -->
+    <string name="tab_cycle_devices">Cycle devices</string>
+    <string name="tab_ha_devices">HA devices</string>
+
+    <!-- Home -->
+    <string name="home_empty_cycle">No cycle devices yet. Tap + below to add one.</string>
+    <string name="home_empty_ha">No HA devices yet. Configure the HA connection in Settings first.</string>
+    <string name="home_badge_overdue">Overdue</string>
+    <string name="home_badge_severely_overdue">Severely overdue</string>
+    <string name="home_card_mark_charged">Mark charged</string>
+    <string name="home_card_aria_mark_charged">Mark as charged</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance_subtitle">Theme: follow system / light / dark</string>
+    <string name="settings_cycle_devices">Cycle devices</string>
+    <string name="settings_cycle_devices_subtitle">Manually track devices that need periodic charging</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_subtitle">App display language</string>
+
+    <!-- Appearance -->
+    <string name="appearance_title">Appearance</string>
+    <string name="appearance_option_system">Follow system</string>
+    <string name="appearance_option_system_desc">Match the OS light / dark setting</string>
+    <string name="appearance_option_light">Always light</string>
+    <string name="appearance_option_light_desc">Use a light background at all times</string>
+    <string name="appearance_option_dark">Always dark</string>
+    <string name="appearance_option_dark_desc">Use a dark background, easier on the eyes at night</string>
+
+    <!-- Language -->
+    <string name="language_title">Language</string>
+    <string name="language_option_system">Follow system</string>
+    <string name="language_option_system_desc">Use the device\'s system language</string>
+    <string name="language_option_zh">简体中文</string>
+    <string name="language_option_zh_desc">Use Simplified Chinese</string>
+    <string name="language_option_en">English</string>
+    <string name="language_option_en_desc">Use English</string>
+
+    <!-- a11y content descriptions -->
+    <string name="cd_settings">Open settings</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_cycle_add">Add cycle device</string>
+    <string name="cd_cycle_delete">Delete cycle device</string>
+
+    <!-- Cycle device list -->
+    <string name="cycle_list_title">Cycle devices</string>
+    <string name="cycle_list_empty">No cycle devices yet. Tap + below to add one.</string>
+    <!-- args: cycleDays(int), relativeDays(String), lastChargedAtDate(String) -->
+    <string name="cycle_row_meta">Charge every %1$d d · %2$s (%3$s)</string>
+    <string name="cycle_badge_warning">Overdue</string>
+    <string name="cycle_badge_danger">Severely overdue</string>
+    <!-- Localised relative-time for "days since last charge" -->
+    <string name="cycle_rel_today">Today</string>
+    <string name="cycle_rel_one_day_ago">1 day ago</string>
+    <!-- args: days(int) -->
+    <string name="cycle_rel_days_ago">%1$d days ago</string>
+
+    <!-- Cycle device edit -->
+    <string name="cycle_edit_title_new">New cycle device</string>
+    <string name="cycle_edit_title_edit">Edit cycle device</string>
+    <string name="cycle_field_name">Device name</string>
+    <string name="cycle_field_category">Category (optional)</string>
+    <string name="cycle_field_cycle_days">Charge cycle (days)</string>
+    <string name="cycle_field_note">Note (optional)</string>
+    <!-- args: lastChargedAt(String) -->
+    <string name="cycle_field_last_charged">Last charged: %1$s</string>
+    <string name="cycle_save">Save</string>
+    <string name="cycle_delete_confirm_title">Delete this device?</string>
+    <string name="cycle_delete_confirm_body">This cannot be undone — the device and its charging history will be removed.</string>
+    <string name="cycle_delete">Delete</string>
+    <string name="cycle_cancel">Cancel</string>
+    <string name="cycle_ok">OK</string>
+    <!-- Inline form errors live in code; if you want them localizable later,
+         promote to named strings and translate here too. -->
+</resources>
