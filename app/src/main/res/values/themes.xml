@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.IcyPower" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+        Base theme used by AndroidManifest before Compose takes over.
+        - Parent switched to Material3 DayNight so the OS-level window background
+          follows the system theme during cold start, eliminating a visible
+          white flash before Compose renders.
+        - windowBackground tied to ?attr/colorSurface; Compose overrides this
+          once its theme is active, but the value matters for the few frames
+          between Activity start and setContent.
+    -->
+    <style name="Theme.IcyPower" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">?attr/colorSurface</item>
+    </style>
+
 </resources>

@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">icyPower</string>
+
+    <!-- 导航 -->
+    <string name="nav_home">主页</string>
+    <string name="nav_settings">设置</string>
+    <string name="nav_appearance">外观</string>
+
+    <!-- Tab -->
+    <string name="tab_cycle_devices">周期设备</string>
+    <string name="tab_ha_devices">HA 设备</string>
+
+    <!-- 主页 -->
+    <string name="home_empty_cycle">尚无周期设备。点击右上角进入设置添加。</string>
+    <string name="home_empty_ha">尚无 HA 设备。请先在设置中配置 HA 连接。</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">设置</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_appearance_subtitle">主题模式：跟随系统 / 亮色 / 暗色</string>
+
+    <!-- 外观 -->
+    <string name="appearance_title">外观</string>
+    <string name="appearance_option_system">跟随系统</string>
+    <string name="appearance_option_light">始终亮色</string>
+    <string name="appearance_option_dark">始终暗色</string>
+
+    <!-- a11y content description -->
+    <string name="cd_settings">打开设置</string>
+    <string name="cd_back">返回</string>
 </resources>
