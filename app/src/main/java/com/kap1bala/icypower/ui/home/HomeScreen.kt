@@ -3,6 +3,8 @@ package com.kap1bala.icypower.ui.home
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +18,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,27 +26,37 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import com.kap1bala.icypower.R
+import com.kap1bala.icypower.ui.theme.LocalSpacing
 
 private const val TAB_CYCLE = 0
 private const val TAB_HA = 1
+private const val TAB_COUNT = 2
 
 /**
- * Home screen — TopAppBar + TabRow + per-tab panel.
+ * Home screen — TopAppBar + swipeable TabRow + per-tab panel.
+ *
+ * Tab state model:
+ *   - [selectedTab] is the source of truth for the TabRow.
+ *   - [pagerState] drives a [HorizontalPager] that hosts the two panels.
+ *   - The two are bidirectionally synced via [LaunchedEffect] — swiping
+ *     the pager updates `selectedTab`; tapping a Tab animates the pager
+ *     to that page.
  *
  * Padding strategy:
  *   - The outer [Column] consumes [Scaffold]'s `innerPadding` so the TabRow
- *     sits flush under the TopAppBar and the Box doesn't extend past the
+ *     sits flush under the TopAppBar and the pager doesn't extend past the
  *     gesture / navigation bar.
- *   - Inside the Box, panels render full-bleed. They must **not** re-apply
- *     `innerPadding` — that was the source of a duplicate top-spacing bug
- *     where the first cycle-device card had a TopAppBar-height sized gap
- *     above it.
+ *   - The pager pages render full-bleed — they must NOT re-apply
+ *     `innerPadding` (we hit that bug earlier; see commit 800ca96).
  *
- * - Tab A "周期设备": [HomeCycleDevicesPanel] — wires to [com.kap1bala.icypower.ui.cycle.CycleDeviceListViewModel]
- *   (shared with the settings-list screen; same DataStore, one truth).
- * - Tab B "HA 设备": still a no-op placeholder. The real HA client
- *   (OkHttp REST + WS per `prompts/ha.md`) is planned for a follow-up PR.
+ * - Page 0 "周期设备": [HomeCycleDevicesPanel] — wires to
+ *   [com.kap1bala.icypower.ui.cycle.CycleDeviceListViewModel] (single
+ *   DataStore-backed source of truth shared with the settings list).
+ * - Page 1 "HA 设备": still a no-op placeholder. The real HA client
+ *   (OkHttp REST + WS per `prompts/ha.md`) is wired in IcyPowerApp
+ *   but the UI layer for it is planned for the next PR.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +65,24 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(TAB_CYCLE) }
+
+    val pagerState = rememberPagerState(
+        initialPage = selectedTab.coerceIn(0, TAB_COUNT - 1),
+        pageCount = { TAB_COUNT },
+    )
+
+    // swipe → drive the indicator
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != selectedTab) {
+            selectedTab = pagerState.currentPage
+        }
+    }
+    // tap a tab → animate the pager; guard against feedback loops
+    LaunchedEffect(selectedTab) {
+        if (!pagerState.isScrollInProgress && pagerState.currentPage != selectedTab) {
+            pagerState.animateScrollToPage(selectedTab)
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -92,14 +123,15 @@ fun HomeScreen(
             // both default to colorScheme.surface.
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                when (selectedTab) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+            ) { page ->
+                when (page) {
                     TAB_CYCLE -> HomeCycleDevicesPanel(
                         onOpenSettings = onOpenSettings,
                     )
-                    TAB_HA -> EmptyHaPanel(
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    TAB_HA -> EmptyHaPanel(modifier = Modifier.fillMaxSize())
                 }
             }
         }
@@ -108,14 +140,16 @@ fun HomeScreen(
 
 @Composable
 private fun EmptyHaPanel(modifier: Modifier = Modifier) {
+    val spacing = LocalSpacing.current
     Box(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = spacing.lg),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.home_empty_ha),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
 }
