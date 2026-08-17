@@ -27,6 +27,29 @@
     <string name="settings_cycle_devices_subtitle">Manually track devices that need periodic charging</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_subtitle">App display language</string>
+    <string name="settings_ha">Home Assistant</string>
+    <string name="settings_ha_subtitle">LLAT and server URL</string>
+
+    <!-- Home Assistant settings -->
+    <string name="ha_title">Home Assistant</string>
+    <string name="ha_subtitle">Connect to your Home Assistant instance</string>
+    <string name="ha_field_url">Server URL</string>
+    <string name="ha_field_url_hint">e.g. http://homeassistant.local:8123</string>
+    <string name="ha_field_url_error_blank">URL is required</string>
+    <string name="ha_field_token">Long-Lived Access Token</string>
+    <string name="ha_field_token_hint">Create one in HA profile → Long-Lived Access Tokens</string>
+    <string name="ha_field_token_placeholder">32+ character token</string>
+    <string name="ha_button_test">Test connection</string>
+    <string name="ha_button_save">Save</string>
+    <string name="ha_button_clear">Clear credentials</string>
+    <string name="ha_status_testing">Testing…</string>
+    <string name="ha_status_saving">Saving…</string>
+    <string name="ha_status_ok">✓ Connected</string>
+    <string name="ha_status_failed">✗ Connection failed — check URL and token</string>
+    <string name="ha_toggle_show_token">Show / hide token</string>
+    <string name="ha_token_show">Show</string>
+    <string name="ha_token_hide">Hide</string>
+    <string name="cd_ha_test">Test connection</string>
 
     <!-- Appearance -->
     <string name="appearance_title">Appearance</string>

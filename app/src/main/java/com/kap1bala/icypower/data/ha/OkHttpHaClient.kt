@@ -83,8 +83,14 @@ class OkHttpHaClient(
     // ─────────────────────── REST (suspend) ────────────────────────────
 
     override suspend fun probe(): Boolean = withContext(Dispatchers.IO) {
+        // Probe via /api/states (not /api/). /api/ returns 200 anonymously,
+        // so a successful probe there would NOT tell us the token is valid —
+        // it would only confirm the URL is reachable. /api/states requires
+        // authentication, so this single call distinguishes "URL up" from
+        // "URL up + token valid". 401 surfaces as a thrown IOException via
+        // the AuthorizationInterceptor and is caught by [runCatching].
         runCatching {
-            authedClient.newCall(buildRequest("/api/")).execute().use { it.isSuccessful }
+            authedClient.newCall(buildRequest("/api/states")).execute().use { it.isSuccessful }
         }.getOrElse { false }
     }
 

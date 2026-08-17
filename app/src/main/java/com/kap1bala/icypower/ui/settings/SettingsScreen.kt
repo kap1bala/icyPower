@@ -39,9 +39,10 @@ import com.kap1bala.icypower.R
  *   - Appearance (theme mode picker)
  *   - Cycle devices (manual charge-cycle tracking)
  *   - Language (display locale)
+ *   - Home Assistant (URL + LLAT, see HaSettingsScreen)
  *
- * More entries (HA connection, alert rules, quiet hours, data management)
- * will land here in their own PRs — see feat.md §2.
+ * More entries (alert rules, quiet hours, data management) will land
+ * here in their own PRs — see feat.md §2.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +51,7 @@ fun SettingsScreen(
     onOpenAppearance: () -> Unit,
     onOpenCycleDevices: () -> Unit,
     onOpenLanguage: () -> Unit,
+    onOpenHa: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -94,6 +96,13 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_language),
                 subtitle = stringResource(R.string.settings_language_subtitle),
                 onClick = onOpenLanguage,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            SettingsListItem(
+                title = stringResource(R.string.settings_ha),
+                subtitle = stringResource(R.string.settings_ha_subtitle),
+                onClick = onOpenHa,
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
