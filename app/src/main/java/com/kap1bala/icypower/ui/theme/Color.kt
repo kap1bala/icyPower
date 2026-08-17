@@ -1,22 +1,17 @@
 package com.kap1bala.icypower.ui.theme
 
 /**
- * ⚠ SINGLE SOURCE OF TRUTH FOR COLOR HEX VALUES ⚠
+ * SINGLE SOURCE OF TRUTH FOR COLOR HEX VALUES.
  *
- * Every hex literal in the entire app must come from this file, which in turn
- * mirrors `prompts/ui.md`. Component code must reference MaterialTheme
- * ColorScheme tokens (e.g. `MaterialTheme.colorScheme.primary`) rather than
- * these constants directly — these are only here so we can build the two
- * ColorScheme instances below.
- *
- * If a value is missing here, it is a spec gap in ui.md — fix ui.md first,
- * then mirror the change here. Do not invent hex values in component code.
+ * Mirrors `prompts/ui.md` (Ant design tokens). Component code must reference
+ * MaterialTheme ColorScheme tokens or the LocalWarning/Danger/Success
+ * CompositionLocals defined in Theme.kt — never these constants directly.
  */
 
 import androidx.compose.ui.graphics.Color
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Light tokens (from ui.md `colors:`)
+// Light tokens
 // ──────────────────────────────────────────────────────────────────────────────
 
 val Primary = Color(0xFF1677FF)
@@ -29,26 +24,22 @@ val TextLight = Color(0xFF111827)
 val Neutral = Color(0xFFFFFFFF)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Dark tokens (from ui.md `colorsDark:`)
+// Dark tokens
 // ──────────────────────────────────────────────────────────────────────────────
 
 val SurfaceDark = Color(0xFF0B1220)
 val SurfaceElevatedDark = Color(0xFF111827)
 val SurfaceMutedDark = Color(0xFF1F2937)
-
 val TextDark = Color(0xFFF9FAFB)
 val TextMutedDark = Color(0xFF9CA3AF)
 val TextInverseDark = Color(0xFF111827)
-
 val BorderDark = Color(0xFF374151)
 val BorderStrongDark = Color(0xFF4B5563)
-
 val PrimaryDark = Color(0xFF3B82F6)
 val SecondaryDark = Color(0xFFA78BFA)
 val SuccessDark = Color(0xFF22C55E)
 val WarningDark = Color(0xFFF59E0B)
 val DangerDark = Color(0xFFEF4444)
-
 val SuccessSoftDark = Color(0xFF052E1A)
 val WarningSoftDark = Color(0xFF3A1F05)
 val DangerSoftDark = Color(0xFF3A0F0F)

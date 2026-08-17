@@ -1,6 +1,7 @@
 package com.kap1bala.icypower.ui.home
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -23,17 +24,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.kap1bala.icypower.R
 
 private const val TAB_CYCLE = 0
 private const val TAB_HA = 1
 
 /**
- * Home screen — TopAppBar + TabRow + empty-state placeholders.
+ * Home screen — TopAppBar + TabRow + per-tab panel.
  *
- * The cards proper (device name, last charged, current level) are deferred
- * to a follow-up PR; this v1 only proves the navigation skeleton, theme
- * switching, and persistence plumbing end-to-end.
+ * - Tab A "周期设备": [HomeCycleDevicesPanel] — wires to [com.kap1bala.icypower.ui.cycle.CycleDeviceListViewModel]
+ *   (shared with the settings-list screen; same DataStore, one truth).
+ * - Tab B "HA 设备": still a no-op placeholder. The real HA client
+ *   (OkHttp REST + WS per `prompts/ha.md`) is planned for a follow-up PR.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,25 +80,40 @@ fun HomeScreen(
                 )
             }
 
-            // Divider between TabRow and the content area. PrimaryTabRow has
-            // its own internal indicator, but the seam between TabRow and
-            // content still benefits from an explicit outlineVariant line in
-            // dark mode (both share colorScheme.surface otherwise).
+            // PrimaryTabRow has its own indicator; outlineVariant line keeps
+            // the seam between TabRow and content legible in dark mode where
+            // both default to colorScheme.surface.
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(
-                        if (selectedTab == TAB_CYCLE) R.string.home_empty_cycle
-                        else R.string.home_empty_ha,
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (selectedTab) {
+                    TAB_CYCLE -> HomeCycleDevicesPanel(
+                        contentPadding = innerPadding,
+                        onOpenSettings = onOpenSettings,
+                    )
+                    TAB_HA -> EmptyHaPanel(
+                        contentPadding = innerPadding,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun EmptyHaPanel(
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.padding(contentPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.home_empty_ha),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

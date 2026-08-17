@@ -20,15 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.kap1bala.icypower.R
 
-/**
- * Settings index — currently only "Appearance". Future routes
- * (cycle devices, HA connection, alert rules, quiet hours) will land here.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
     onOpenAppearance: () -> Unit,
+    onOpenCycleDevices: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -62,6 +59,19 @@ fun SettingsScreen(
                     )
                 },
                 modifier = Modifier.clickable(onClick = onOpenAppearance),
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_cycle_devices)) },
+                supportingContent = {
+                    Text(
+                        text = stringResource(R.string.settings_cycle_devices_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                modifier = Modifier.clickable(onClick = onOpenCycleDevices),
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }

@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.kap1bala.icypower.data.cycle.CycleDeviceRepository
 import com.kap1bala.icypower.data.ha.HaClient
 import com.kap1bala.icypower.data.ha.NoOpHaClient
 import com.kap1bala.icypower.data.preferences.ThemePreferences
@@ -52,6 +53,11 @@ class IcyPowerApp : Application() {
     /** Theme preferences. */
     val themePreferences: ThemePreferences by lazy {
         ThemePreferences(applicationContext.icyPowerDataStore)
+    }
+
+    /** Repository for user-tracked charge-cycle devices. */
+    val cycleDeviceRepository: CycleDeviceRepository by lazy {
+        CycleDeviceRepository(applicationContext.icyPowerDataStore)
     }
 
     override fun onCreate() {

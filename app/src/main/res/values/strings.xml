@@ -13,11 +13,17 @@
     <!-- 主页 -->
     <string name="home_empty_cycle">尚无周期设备。点击右上角进入设置添加。</string>
     <string name="home_empty_ha">尚无 HA 设备。请先在设置中配置 HA 连接。</string>
+    <string name="home_badge_overdue">已超期</string>
+    <string name="home_badge_severely_overdue">严重超期</string>
+    <string name="home_card_mark_charged">已充电</string>
+    <string name="home_card_aria_mark_charged">标记已充电</string>
 
     <!-- 设置 -->
     <string name="settings_title">设置</string>
     <string name="settings_appearance">外观</string>
     <string name="settings_appearance_subtitle">主题模式：跟随系统 / 亮色 / 暗色</string>
+    <string name="settings_cycle_devices">周期设备</string>
+    <string name="settings_cycle_devices_subtitle">手动登记、定期充电提醒</string>
 
     <!-- 外观 -->
     <string name="appearance_title">外观</string>
@@ -28,4 +34,31 @@
     <!-- a11y content description -->
     <string name="cd_settings">打开设置</string>
     <string name="cd_back">返回</string>
+    <string name="cd_cycle_add">添加周期设备</string>
+    <string name="cd_cycle_delete">删除周期设备</string>
+
+    <!-- 周期设备列表 -->
+    <string name="cycle_list_title">周期设备</string>
+    <string name="cycle_list_empty">尚无周期设备。点击右下角 + 添加。</string>
+    <!-- args: cycleDays(int), relativeDays(String), lastChargedAtDate(String) -->
+    <string name="cycle_row_meta">每 %1$d 天充一次 · %2$s（%3$s）</string>
+    <string name="cycle_badge_warning">已超期</string>
+    <string name="cycle_badge_danger">严重超期</string>
+
+    <!-- 周期设备编辑 -->
+    <string name="cycle_edit_title_new">新增周期设备</string>
+    <string name="cycle_edit_title_edit">编辑周期设备</string>
+    <string name="cycle_field_name">设备名</string>
+    <string name="cycle_field_category">分类（可选）</string>
+    <string name="cycle_field_cycle_days">充电周期（天）</string>
+    <string name="cycle_field_note">备注（可选）</string>
+    <!-- args: lastChargedAt(String) -->
+    <string name="cycle_field_last_charged">上次充电：%1$s</string>
+    <string name="cycle_save">保存</string>
+    <string name="cycle_delete_confirm_title">删除该设备？</string>
+    <string name="cycle_delete_confirm_body">删除后无法恢复，此设备的充电历史也会一起清空。</string>
+    <string name="cycle_delete">删除</string>
+    <string name="cycle_cancel">取消</string>
+    <string name="cycle_ok">确定</string>
+    <!-- 表单内联错误（内部直接写中文，避免重复字符串条目） -->
 </resources>

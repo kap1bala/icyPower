@@ -12,4 +12,18 @@ object Destinations {
     const val HOME = "home"
     const val SETTINGS = "settings"
     const val APPEARANCE = "settings/appearance"
+    const val SETTINGS_CYCLE = "settings/cycle"
+    const val SETTINGS_CYCLE_EDIT = "settings/cycle/edit"
+
+    /** Argument key for the optional device id on the edit route. */
+    const val ARG_CYCLE_DEVICE_ID = "id"
+
+    /** Route pattern for the edit screen; bind with [cycleDeviceEdit]. */
+    const val SETTINGS_CYCLE_EDIT_PATTERN =
+        "$SETTINGS_CYCLE_EDIT?$ARG_CYCLE_DEVICE_ID={$ARG_CYCLE_DEVICE_ID}"
+
+    /** Build a concrete edit route. `id = null` → create new. */
+    fun cycleDeviceEdit(id: String?): String =
+        if (id == null) SETTINGS_CYCLE_EDIT
+        else "$SETTINGS_CYCLE_EDIT?$ARG_CYCLE_DEVICE_ID=$id"
 }

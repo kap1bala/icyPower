@@ -2,6 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+        Networking is required for the HA integration planned in a follow-up
+        PR (OkHttp REST + WebSocket per `prompts/ha.md` §4–§5). Declared
+        ahead of that PR so the manifest doesn't need touching when the
+        real HaClient lands. The current v1 client is `NoOpHaClient` and
+        makes no network calls — this permission is dormant for now.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".IcyPowerApp"
         android:allowBackup="true"
