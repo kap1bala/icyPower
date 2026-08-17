@@ -6,20 +6,39 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.kap1bala.icypower.R
 
+/**
+ * Settings index (route /settings).
+ *
+ * List rows mirror ui.md §8.3 (`List.Item`):
+ *   - 12dp vertical / 16dp horizontal padding (itemPadding default)
+ *   - Title = titleMedium (16/24 Medium); subtitle = bodySmall onSurfaceVariant
+ *   - Trailing chevron-right indicates "this row drills in"
+ *
+ * Currently exposes:
+ *   - Appearance (theme mode picker)
+ *   - Cycle devices (manual charge-cycle tracking)
+ *
+ * More entries (HA connection, alert rules, quiet hours, data management)
+ * will land here in their own PRs — see feat.md §2.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -49,31 +68,61 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_appearance)) },
-                supportingContent = {
-                    Text(
-                        text = stringResource(R.string.settings_appearance_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                modifier = Modifier.clickable(onClick = onOpenAppearance),
+            SettingsListItem(
+                title = stringResource(R.string.settings_appearance),
+                subtitle = stringResource(R.string.settings_appearance_subtitle),
+                onClick = onOpenAppearance,
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_cycle_devices)) },
-                supportingContent = {
-                    Text(
-                        text = stringResource(R.string.settings_cycle_devices_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                modifier = Modifier.clickable(onClick = onOpenCycleDevices),
+            SettingsListItem(
+                title = stringResource(R.string.settings_cycle_devices),
+                subtitle = stringResource(R.string.settings_cycle_devices_subtitle),
+                onClick = onOpenCycleDevices,
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
+}
+
+/**
+ * One settings row.
+ *
+ * Pulled out so both `Appearance` and `Cycle devices` use identical antd-style
+ * row visuals — avoids drift between rows. ui.md §8.3 governs the layout.
+ */
+@Composable
+private fun SettingsListItem(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ListItem(
+        headlineContent = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+            )
+        },
+        supportingContent = {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        trailingContent = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+        },
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(onClick = onClick),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    )
 }

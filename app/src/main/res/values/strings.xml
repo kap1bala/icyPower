@@ -28,8 +28,11 @@
     <!-- 外观 -->
     <string name="appearance_title">外观</string>
     <string name="appearance_option_system">跟随系统</string>
+    <string name="appearance_option_system_desc">跟随操作系统的浅色 / 深色设置自动切换</string>
     <string name="appearance_option_light">始终亮色</string>
+    <string name="appearance_option_light_desc">固定使用浅色背景</string>
     <string name="appearance_option_dark">始终暗色</string>
+    <string name="appearance_option_dark_desc">固定使用深色背景，适合夜间使用</string>
 
     <!-- a11y content description -->
     <string name="cd_settings">打开设置</string>
