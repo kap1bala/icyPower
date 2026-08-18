@@ -7,34 +7,48 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kap1bala.icypower.IcyPowerApp
 import com.kap1bala.icypower.data.cycle.OverdueSeverity
+import com.kap1bala.icypower.data.ha.HaAuthException
 import com.kap1bala.icypower.data.ha.HaClient
 import com.kap1bala.icypower.data.ha.HaEvent
 import com.kap1bala.icypower.data.ha.HaState
 import com.kap1bala.icypower.data.ha.NoOpHaClient
 import com.kap1bala.icypower.data.preferences.HaMonitorPreferences
-import com.kap1bala.icypower.data.ha.HaAuthException
+import com.kap1bala.icypower.data.preferences.HaMonitoredDevicesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.io.IOException
+import kotlinx.coroutines.Job
 
 /**
  * Drives the Home Assistant devices panel on the home screen.
  *
- * State machine (matches `feat.md §3.2` + plan §3):
+ * State machine (matches `feat.md §3.2`):
  *   NotConfigured → NoOpHaClient (no URL/token configured).
  *   Loading      → Baseline `getStates()` in flight.
- *   Loaded       → At least one monitored entity; cards sorted by
- *                  severity (Danger > Warning > None), then by entityId.
- *   Empty        → HA reachable but no entities with battery attributes.
+ *   Loaded       → Cards built from the user-picked subset of HA entities.
+ *   Empty        → Either HA has no battery entities at all, OR the user
+ *                  has unchecked every battery entity (the UI prompts
+ *                  them to pick via /settings/ha/devices).
  *   Error        → IOException (network / 5xx); `errorMessage` set.
- *   Unauthorized → HaAuthException (401 / auth_invalid); user is
- *                  routed to /settings/ha to rotate the token.
+ *   Unauthorized → HaAuthException (401 / auth_invalid); user is routed
+ *                  to /settings/ha to rotate the token.
+ *
+ * Selection model:
+ *   - `HaMonitoredDevicesRepository` is the source of truth for which
+ *     entities to display.
+ *   - The view model pulls `monitoredIds.first()` on bootstrap, filters
+ *     the HA baseline through that set, and uses the same set as the
+ *     WS `subscribeStateChanges` whitelist. WS events for entities the
+ *     user later un-picks are filtered server-side and never delivered
+ *     to this ViewModel — by the time the user re-opens the device
+ *     list and re-picks, the next `refresh()` rebuilds the cards.
  *
  * Live updates arrive via WebSocket (`subscribeStateChanges`). The
  * [HaClient] handles reconnection internally (exponential backoff
@@ -44,87 +58,116 @@ import java.io.IOException
 class HaViewModel(
     private val haClient: HaClient,
     private val monitorPrefs: HaMonitorPreferences,
+    private val monitoredRepo: HaMonitoredDevicesRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HaDevicesState())
     val state: StateFlow<HaDevicesState> = _state.asStateFlow()
 
+    /**
+     * Long-lived baseline + WS subscription. Reacts to every change in
+     * [HaMonitoredDevicesRepository.monitoredIds] — when the user flips
+     * a switch in /settings/ha/devices, the home panel re-fetches the
+     * baseline and resubscribes the WS without an app restart.
+     *
+     * Stored as a [Job] so [refresh] can cancel and replace it.
+     */
+    private var bootstrapJob: Job? = null
+
     init {
-        bootstrap()
+        startMonitoring()
     }
 
-    /**
-     * Initial fetch + WS subscription. Kept small so [init] can call it
-     * directly; split only if the call site grows beyond a handful of
-     * distinct stages.
-     */
-    private fun bootstrap() {
-        viewModelScope.launch {
+    fun refresh() {
+        bootstrapJob?.cancel()
+        _state.value = HaDevicesState(phase = HaPhase.Loading)
+        startMonitoring()
+    }
+
+    private fun startMonitoring() {
+        bootstrapJob = viewModelScope.launch {
             if (haClient is NoOpHaClient) {
                 _state.value = HaDevicesState(phase = HaPhase.NotConfigured)
                 return@launch
             }
-            _state.value = HaDevicesState(phase = HaPhase.Loading)
 
+            // Thresholds change rarely; one snapshot is fine.
             val (warning, danger) = combine(
                 monitorPrefs.warningThreshold,
                 monitorPrefs.dangerThreshold,
             ) { w, d -> w to d }.first()
 
-            // Baseline
-            val baseline = runCatching { haClient.getStates() }
-            baseline.fold(
-                onSuccess = { states ->
-                    handleBaseline(states, warning, danger)
-                },
-                onFailure = { e ->
-                    when (e) {
-                        is HaAuthException ->
-                            _state.value = HaDevicesState(phase = HaPhase.Unauthorized)
-                        else ->
-                            _state.value = HaDevicesState(
-                                phase = HaPhase.Error,
-                                errorMessage = e.message ?: e::class.simpleName,
-                            )
-                    }
-                },
-            )
+            // The interesting loop: every emit of `monitoredIds`
+            // (initial value + each toggle on /settings/ha/devices) re-runs
+            // the baseline and (re-)subscribes the WS. `collectLatest`
+            // cancels the in-flight WS subscription when a new value
+            // arrives, so we never have two open WS collectors.
+            monitoredRepo.monitoredIds.collectLatest { monitored ->
+                if (_state.value.phase !in setOf(
+                        HaPhase.NotConfigured, HaPhase.Unauthorized, HaPhase.Error,
+                    )
+                ) {
+                    // Don't flash a Loading state for an Error/Unauthorized
+                    // session — the user is busy fixing the URL/token and
+                    // would be confused by a "loading" overlay.
+                }
+                val baseline = runCatching { haClient.getStates() }
+                baseline.fold(
+                    onSuccess = { states ->
+                        handleBaseline(states, monitored, warning, danger)
+                    },
+                    onFailure = { e ->
+                        when (e) {
+                            is HaAuthException ->
+                                _state.value = HaDevicesState(phase = HaPhase.Unauthorized)
+                            else ->
+                                _state.value = HaDevicesState(
+                                    phase = HaPhase.Error,
+                                    errorMessage = e.message ?: e::class.simpleName,
+                                )
+                        }
+                        return@collectLatest
+                    },
+                )
 
-            // Subscribe to live updates. Skip subscription if we don't
-            // have any monitored entities — saves a WS connection.
-            val monitoredIds = _state.value.devices.map { it.entityId }
-            if (monitoredIds.isNotEmpty()) {
-                haClient.subscribeStateChanges(monitoredIds)
-                    .onEach { event -> handleWsEvent(event, warning, danger) }
-                    .launchIn(viewModelScope)
+                if (monitored.isNotEmpty()) {
+                    haClient.subscribeStateChanges(monitored.toList())
+                        .onEach { event -> handleWsEvent(event, monitored, warning, danger) }
+                        .collect()
+                }
             }
         }
     }
 
-    fun refresh() {
-        // Reset to Loading and re-run bootstrap. Cheap enough at v1
-        // scale (≤ a few hundred entities) that we don't bother with a
-        // separate "incremental refresh" path.
-        _state.value = HaDevicesState(phase = HaPhase.Loading)
-        bootstrap()
-    }
-
-    private fun handleBaseline(states: List<HaState>, warning: Int, danger: Int) {
-        val cards = states.mapNotNull { it.toMonitoredCardOrNull(warning, danger) }
+    private fun handleBaseline(
+        states: List<HaState>,
+        monitored: Set<String>,
+        warning: Int,
+        danger: Int,
+    ) {
+        val cards = states
+            .filter { it.entityId in monitored }
+            .mapNotNull { it.toMonitoredCardOrNull(warning, danger) }
             .sortedWith(severityThenId())
+        val anyBattery = states.any { it.batteryPercent() != null }
+        val phase = if (cards.isNotEmpty()) HaPhase.Loaded else HaPhase.Empty
         _state.value = HaDevicesState(
-            phase = if (cards.isEmpty()) HaPhase.Empty else HaPhase.Loaded,
+            phase = phase,
             devices = cards,
+            hasAnyBatteryEntity = anyBattery,
         )
     }
 
-    private fun handleWsEvent(event: HaEvent, warning: Int, danger: Int) {
+    private fun handleWsEvent(
+        event: HaEvent,
+        monitored: Set<String>,
+        warning: Int,
+        danger: Int,
+    ) {
         when (event) {
             is HaEvent.HaStateChange -> {
+                if (event.entityId !in monitored) return  // user later unpicked it
                 val current = _state.value
-                // If we hadn't loaded anything yet, just keep the current
-                // phase — the WS event is incidental; the baseline tells
-                // us what to render.
                 val updated = current.devices.toMutableList()
                 val idx = updated.indexOfFirst { it.entityId == event.entityId }
                 val newCard = event.state.toMonitoredCardOrNull(warning, danger)
@@ -142,9 +185,6 @@ class HaViewModel(
                 )
             }
             is HaEvent.HaClientError -> {
-                // A live WS error after we've loaded: keep cards, flag
-                // "reconnecting" so the user knows the live data may be
-                // stale. A transient blip won't be mistaken for "Empty".
                 val current = _state.value
                 if (event.cause is HaAuthException) {
                     _state.value = current.copy(phase = HaPhase.Unauthorized)
@@ -157,6 +197,7 @@ class HaViewModel(
                     _state.value = HaDevicesState(
                         phase = HaPhase.Error,
                         errorMessage = event.cause.message ?: event.cause::class.simpleName,
+                        hasAnyBatteryEntity = current.hasAnyBatteryEntity,
                     )
                 }
             }
@@ -164,7 +205,7 @@ class HaViewModel(
     }
 
     private fun HaState.toMonitoredCardOrNull(warning: Int, danger: Int): HaDeviceCard? {
-        val percent = batteryPercent() ?: return null  // ha.md §6: skip non-battery entities
+        val percent = batteryPercent() ?: return null
         val name = attributes["friendly_name"]?.toString()?.takeIf { it.isNotBlank() }
             ?: entityId
         val areaStr = attributes["area"]?.toString()?.takeIf { it.isNotBlank() }
@@ -195,6 +236,7 @@ class HaViewModel(
                 HaViewModel(
                     haClient = app.haClient,
                     monitorPrefs = app.haMonitorPreferences,
+                    monitoredRepo = app.haMonitoredDevicesRepository,
                 )
             }
         }
@@ -210,9 +252,10 @@ enum class HaPhase {
     NotConfigured,
     /** Initial baseline in flight. */
     Loading,
-    /** HA reachable, at least one monitored entity. */
+    /** HA reachable, at least one user-picked monitored entity. */
     Loaded,
-    /** HA reachable, but no entities have a battery attribute. */
+    /** HA reachable, but no cards are user-monitored.
+     *  Either HA has no battery entities OR the user unchecked everything. */
     Empty,
     /** IOException or 5xx. */
     Error,
@@ -234,4 +277,8 @@ data class HaDevicesState(
     val devices: List<HaDeviceCard> = emptyList(),
     val errorMessage: String? = null,
     val isReconnecting: Boolean = false,
+    /** True iff HA returned ≥1 entity with a battery attribute. Used by the
+     *  home panel's Empty state to decide between "pick devices" (user
+     *  unchecked all) and "no devices in HA" (HA itself has none). */
+    val hasAnyBatteryEntity: Boolean = false,
 )
