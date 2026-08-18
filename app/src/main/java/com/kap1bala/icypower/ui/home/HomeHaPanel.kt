@@ -61,7 +61,11 @@ import java.time.Instant
  *   NotConfigured → antd "Empty" centred prompt + button → /settings/ha
  *   Loading      → 3 skeleton cards
  *   Loaded       → LazyColumn of [HomeHaCard], sorted by severity
- *   Empty        → antd "Empty" centred prompt explaining no battery devices
+ *   Empty        → branched on `state.hasAnyBatteryEntity`:
+ *                    - HA has battery entities but user unchecked all
+ *                      → "去选择" CTA → /settings/ha/devices
+ *                    - HA has no battery entities at all
+ *                      → "去设置" CTA → /settings/ha
  *   Error        → red icon + 重试 button
  *   Unauthorized → warning icon + "去设置" button
  *
@@ -72,6 +76,7 @@ import java.time.Instant
 @Composable
 fun HomeHaPanel(
     onOpenSettings: () -> Unit,
+    onChooseDevices: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HaViewModel = viewModel(factory = HaViewModel.Factory),
 ) {
@@ -81,7 +86,11 @@ fun HomeHaPanel(
         HaPhase.NotConfigured -> NotConfiguredPane(onOpenSettings = onOpenSettings)
         HaPhase.Loading       -> LoadingPane()
         HaPhase.Loaded        -> LoadedPane(state = state, onRetry = viewModel::refresh)
-        HaPhase.Empty         -> EmptyPane(onOpenSettings = onOpenSettings)
+        HaPhase.Empty         -> EmptyPane(
+            hasAnyBatteryEntity = state.hasAnyBatteryEntity,
+            onChooseDevices = onChooseDevices,
+            onOpenSettings = onOpenSettings,
+        )
         HaPhase.Error         -> ErrorPane(state = state, onRetry = viewModel::refresh)
         HaPhase.Unauthorized  -> UnauthorizedPane(onOpenSettings = onOpenSettings)
     }
@@ -140,14 +149,31 @@ private fun LoadedPane(state: HaDevicesState, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun EmptyPane(onOpenSettings: () -> Unit) {
-    CenteredMessage(
-        icon = Icons.Filled.Info,
-        iconTint = MaterialTheme.colorScheme.primary,
-        title = stringResource(R.string.home_ha_empty_title),
-        body = stringResource(R.string.home_ha_empty_desc),
-        action = stringResource(R.string.settings_ha) to onOpenSettings,
-    )
+private fun EmptyPane(
+    hasAnyBatteryEntity: Boolean,
+    onChooseDevices: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    // HA exposes battery attributes but the user has unchecked every
+    // entity → nudge them at the device-selection screen. Otherwise HA
+    // itself has no battery entities → fall back to "check your setup".
+    if (hasAnyBatteryEntity) {
+        CenteredMessage(
+            icon = Icons.Filled.Info,
+            iconTint = MaterialTheme.colorScheme.primary,
+            title = stringResource(R.string.home_ha_empty_choose_devices_title),
+            body = stringResource(R.string.home_ha_empty_choose_devices_desc),
+            action = stringResource(R.string.home_ha_empty_choose_devices_action) to onChooseDevices,
+        )
+    } else {
+        CenteredMessage(
+            icon = Icons.Filled.Info,
+            iconTint = MaterialTheme.colorScheme.primary,
+            title = stringResource(R.string.home_ha_empty_title),
+            body = stringResource(R.string.home_ha_empty_desc),
+            action = stringResource(R.string.settings_ha) to onOpenSettings,
+        )
+    }
 }
 
 @Composable

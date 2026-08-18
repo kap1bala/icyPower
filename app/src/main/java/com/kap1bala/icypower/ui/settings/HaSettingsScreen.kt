@@ -52,6 +52,7 @@ import com.kap1bala.icypower.ui.theme.LocalSuccess
 @Composable
 fun HaSettingsScreen(
     onBack: () -> Unit,
+    onOpenDevices: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HaViewModel = viewModel(factory = HaViewModel.Factory),
 ) {
@@ -194,6 +195,19 @@ fun HaSettingsScreen(
                     text = stringResource(R.string.ha_button_clear),
                     color = LocalDanger.current,
                 )
+            }
+
+            // Shortcut to the per-entity selection page so the user
+            // doesn't have to back out, then drill into Home Assistant →
+            // Monitored devices. Match the Save / Clear rhythm — same
+            // full-width OutlinedButton shape.
+            OutlinedButton(
+                onClick = onOpenDevices,
+                enabled = state.phase == Phase.Idle,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+            ) {
+                Text(stringResource(R.string.settings_ha_devices))
             }
         }
     }

@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.kap1bala.icypower.ui.cycle.CycleDeviceEditScreen
 import com.kap1bala.icypower.ui.cycle.CycleDeviceListScreen
+import com.kap1bala.icypower.ui.ha.HaDeviceSelectionScreen
 import com.kap1bala.icypower.ui.home.HomeScreen
 import com.kap1bala.icypower.ui.settings.AppearanceScreen
 import com.kap1bala.icypower.ui.settings.HaSettingsScreen
@@ -34,6 +35,9 @@ fun IcyPowerNavHost(
             HomeScreen(
                 onOpenSettings = {
                     navController.navigate(Destinations.SETTINGS)
+                },
+                onChooseHaDevices = {
+                    navController.navigate(Destinations.SETTINGS_HA_DEVICES)
                 },
             )
         }
@@ -70,6 +74,15 @@ fun IcyPowerNavHost(
 
         composable(Destinations.SETTINGS_HA) {
             HaSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDevices = {
+                    navController.navigate(Destinations.SETTINGS_HA_DEVICES)
+                },
+            )
+        }
+
+        composable(Destinations.SETTINGS_HA_DEVICES) {
+            HaDeviceSelectionScreen(
                 onBack = { navController.popBackStack() },
             )
         }

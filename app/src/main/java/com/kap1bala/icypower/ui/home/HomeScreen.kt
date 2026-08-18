@@ -64,6 +64,7 @@ private const val TAB_COUNT = 3
 @Composable
 fun HomeScreen(
     onOpenSettings: () -> Unit,
+    onChooseHaDevices: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(pageCount = { TAB_COUNT })
@@ -133,6 +134,7 @@ fun HomeScreen(
                     )
                     TAB_HA -> HomeHaPanel(
                         onOpenSettings = onOpenSettings,
+                        onChooseDevices = onChooseHaDevices,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

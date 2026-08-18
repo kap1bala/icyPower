@@ -30,6 +30,9 @@
     <string name="home_ha_unauthorized_title">Invalid token</string>
     <string name="home_ha_unauthorized_desc">Update the Long-Lived Access Token in Settings</string>
     <string name="home_ha_unauthorized_action">Open Settings</string>
+    <string name="home_ha_empty_choose_devices_title">No devices selected</string>
+    <string name="home_ha_empty_choose_devices_desc">Pick the entities you want to track on the device-selection page</string>
+    <string name="home_ha_empty_choose_devices_action">Choose devices</string>
     <!-- args: area(String), percent(int), relative(String) -->
     <string name="home_ha_card_subtitle">%1$s · %2$d%% · %3$s</string>
     <string name="home_ha_reconnecting">Reconnecting…</string>
@@ -50,6 +53,14 @@
     <string name="settings_language_subtitle">App display language</string>
     <string name="settings_ha">Home Assistant</string>
     <string name="settings_ha_subtitle">LLAT and server URL</string>
+    <string name="settings_ha_devices">Monitored devices</string>
+    <string name="settings_ha_devices_subtitle">Pick which HA devices appear on Home</string>
+
+    <!-- HA device selection page -->
+    <string name="ha_devices_title">Monitored devices</string>
+    <string name="ha_devices_subtitle">Switched-on devices show on Home</string>
+    <string name="ha_devices_select_all">Select all</string>
+    <string name="ha_devices_clear_all">Clear</string>
 
     <!-- Home Assistant settings -->
     <string name="ha_title">Home Assistant</string>

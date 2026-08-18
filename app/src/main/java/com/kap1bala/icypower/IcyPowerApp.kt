@@ -12,6 +12,7 @@ import com.kap1bala.icypower.data.ha.OkHttpHaClient
 import com.kap1bala.icypower.data.i18n.AppLocale
 import com.kap1bala.icypower.data.i18n.LocalePreferences
 import com.kap1bala.icypower.data.preferences.HaMonitorPreferences
+import com.kap1bala.icypower.data.preferences.HaMonitoredDevicesRepository
 import com.kap1bala.icypower.data.preferences.HaPreferences
 import com.kap1bala.icypower.data.preferences.ThemePreferences
 import com.kap1bala.icypower.data.security.EncryptedSecureStorage
@@ -72,6 +73,11 @@ class IcyPowerApp : Application() {
     /** Battery monitor thresholds (warning / danger, percent). */
     val haMonitorPreferences: HaMonitorPreferences by lazy {
         HaMonitorPreferences(applicationContext.icyPowerDataStore)
+    }
+
+    /** User-picked subset of HA entity_ids that should appear on Home. */
+    val haMonitoredDevicesRepository: HaMonitoredDevicesRepository by lazy {
+        HaMonitoredDevicesRepository(applicationContext.icyPowerDataStore)
     }
 
     /** User-chosen display locale (System / Chinese / English). */
