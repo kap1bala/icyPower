@@ -114,6 +114,9 @@
     <string name="cycle_row_meta">每 %1$d 天充一次 · %2$s（%3$s）</string>
     <string name="cycle_badge_warning">已超期</string>
     <string name="cycle_badge_danger">严重超期</string>
+    <string name="cycle_charged_today">今日已充电</string>
+    <string name="cycle_charged_today_cd">今日已充电</string>
+    <string name="cycle_all_clear_toast">所有设备已充电完成 🎉</string>
     <!-- 距上次充电相对时间：本地化字符串，供 formatRelativeDays() 使用 -->
     <string name="cycle_rel_today">今天</string>
     <string name="cycle_rel_one_day_ago">1 天前</string>

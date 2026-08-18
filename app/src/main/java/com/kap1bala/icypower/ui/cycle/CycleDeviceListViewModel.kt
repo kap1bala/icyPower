@@ -9,29 +9,20 @@ import com.kap1bala.icypower.IcyPowerApp
 import com.kap1bala.icypower.data.cycle.CycleDeviceRepository
 import com.kap1bala.icypower.data.cycle.CycleDeviceState
 import com.kap1bala.icypower.data.cycle.CycleOverview
+import com.kap1bala.icypower.data.cycle.OverdueSeverity
 import com.kap1bala.icypower.data.cycle.computeOverview
 import com.kap1bala.icypower.data.cycle.epochDayOf
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * Owns the sorted list of [CycleDeviceState] for the list screen and the
- * home screen's "周期设备" tab.
- *
- * Sort rule (feat.md §2.1 Tab A):
- *   - Severest first (Danger → Warning → None)
- *   - Within the same severity, most overdue first (largest daysSinceLastCharge)
- *
- * Also derives a [CycleOverview] for the home screen's "概览" tab — computed
- * from the same [devices] StateFlow so there's exactly one subscription to
- * the underlying DataStore (`repo.devices`).
- *
- * @param clock Returns "now" in epoch millis. Default [System.currentTimeMillis];
- *              injectable so unit tests can pin time.
- */
 class CycleDeviceListViewModel(
     private val repo: CycleDeviceRepository,
     private val clock: () -> Long = System::currentTimeMillis,
@@ -52,13 +43,6 @@ class CycleDeviceListViewModel(
             initialValue = emptyList(),
         )
 
-    /**
-     * Aggregated dashboard data for the overview tab.
-     *
-     * Recomputed whenever [devices] emits. `today` is captured once per emit
-     * so all devices within a single aggregation see the same instant — no
-     * race between the first and last device's classification.
-     */
     val overview: StateFlow<CycleOverview> = devices
         .map { states -> computeOverview(states, epochDayOf(clock())) }
         .stateIn(
@@ -67,9 +51,22 @@ class CycleDeviceListViewModel(
             initialValue = CycleOverview.EMPTY,
         )
 
-    /** Invoked by the home card's "已充电" button. */
+    private val _allClearEvents = MutableSharedFlow<AllClearEvent>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    val allClearEvents: SharedFlow<AllClearEvent> = _allClearEvents.asSharedFlow()
+
     fun markCharged(id: String) {
-        viewModelScope.launch { repo.resetLastChargedAt(id) }
+        val wasOverdue = devices.value.any { it.severity != OverdueSeverity.None }
+        viewModelScope.launch {
+            repo.resetLastChargedAt(id)
+            val isOverdueNow = devices.value.any { it.severity != OverdueSeverity.None }
+            if (wasOverdue && !isOverdueNow) {
+                _allClearEvents.tryEmit(AllClearEvent.AllDevicesCharged)
+            }
+        }
     }
 
     companion object {
@@ -80,4 +77,8 @@ class CycleDeviceListViewModel(
             }
         }
     }
+}
+
+sealed interface AllClearEvent {
+    data object AllDevicesCharged : AllClearEvent
 }

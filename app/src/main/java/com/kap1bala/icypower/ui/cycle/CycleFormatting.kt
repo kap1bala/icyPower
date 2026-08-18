@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.kap1bala.icypower.R
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 
@@ -43,3 +46,18 @@ private val displayDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefa
 
 internal fun formatDisplayDate(millis: Long): String =
     displayDateFormatter.format(Date(millis))
+
+/**
+ * "Today" = same calendar day as the system clock, in the device's
+ * default time zone. Returns false for any timestamp from before
+ * today's 00:00 local. Used by [HomeCycleDeviceCard] to decide whether
+ * the "已充电" button should be disabled (the user already pressed it
+ * earlier today; pressing again would be a no-op).
+ */
+internal fun isChargedToday(lastChargedAtMillis: Long): Boolean {
+    val now = LocalDate.now()
+    val then = Instant.ofEpochMilli(lastChargedAtMillis)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+    return now == then
+}

@@ -114,6 +114,9 @@
     <string name="cycle_row_meta">Charge every %1$d d · %2$s (%3$s)</string>
     <string name="cycle_badge_warning">Overdue</string>
     <string name="cycle_badge_danger">Severely overdue</string>
+    <string name="cycle_charged_today">Charged today</string>
+    <string name="cycle_charged_today_cd">Charged today</string>
+    <string name="cycle_all_clear_toast">All devices charged 🎉</string>
     <!-- Localised relative-time for "days since last charge" -->
     <string name="cycle_rel_today">Today</string>
     <string name="cycle_rel_one_day_ago">1 day ago</string>
