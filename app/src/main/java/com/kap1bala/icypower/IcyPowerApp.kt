@@ -86,18 +86,44 @@ class IcyPowerApp : Application() {
     }
 
     /**
-     * v1 HA client. Returns [OkHttpHaClient] iff both [HaPreferences.baseUrl]
-     * and [SecureStorage.getToken] have non-blank values; [NoOpHaClient] otherwise.
+     * Current HA client. Lazily built from the persisted credentials on
+     * first access, and **rebuildable** via [refreshHaClient] so that saving
+     * new credentials in /settings/ha takes effect without an app restart
+     * (a plain `lazy val` would be frozen at first access — the Activity
+     * `recreate()` doesn't rebuild the Application singleton).
      *
-     * `runBlocking` here is deliberate: ViewModels consume [haClient]
-     * synchronously through their factories and there's no clean way to
-     * suspend inside their constructors. The cost is bounded — see the
-     * class doc above.
+     * [runBlocking] is deliberate: ViewModels consume [haClient] synchronously
+     * through their factories and there's no clean way to suspend inside
+     * their constructors. The cost is bounded — see the class doc above.
      */
-    val haClient: HaClient by lazy {
+    private val haClientLock = Any()
+
+    @Volatile
+    private var haClientInstance: HaClient? = null
+
+    val haClient: HaClient
+        get() {
+            haClientInstance?.let { return it }
+            synchronized(haClientLock) {
+                return haClientInstance ?: buildHaClient().also { haClientInstance = it }
+            }
+        }
+
+    /**
+     * Rebuild [haClient] from the *current* persisted credentials. Call this
+     * after the user saves / clears the HA connection so the home panel's
+     * next ViewModel bootstrap picks up the new client immediately.
+     */
+    fun refreshHaClient() {
+        synchronized(haClientLock) {
+            haClientInstance = buildHaClient()
+        }
+    }
+
+    private fun buildHaClient(): HaClient {
         val baseUrl = runBlocking { haPreferences.baseUrl.first() }
         val token = runBlocking { secureStorage.getToken() }
-        if (!baseUrl.isNullOrBlank() && !token.isNullOrEmpty()) {
+        return if (!baseUrl.isNullOrBlank() && !token.isNullOrEmpty()) {
             OkHttpHaClient(
                 baseUrl = baseUrl.trimEnd('/'),
                 token = token,

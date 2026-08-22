@@ -192,6 +192,10 @@ class HaViewModel(
                 phase = Phase.Idle,
                 savedToken = token.ifEmpty { current.savedToken },
             )
+            // Rebuild the app-scoped HA client from the freshly persisted
+            // credentials BEFORE recreating — otherwise the home panel's
+            // next bootstrap would still read the stale (often NoOp) client.
+            (context.applicationContext as IcyPowerApp).refreshHaClient()
             // Confirm the save even though we immediately recreate() —
             // Toast is Activity-independent so it survives the restart.
             Toast.makeText(
@@ -220,6 +224,7 @@ class HaViewModel(
                 statusMessage = Status.TokenCleared,
                 errorReason = null,
             )
+            (context.applicationContext as IcyPowerApp).refreshHaClient()
             context.findActivity()?.recreate()
         }
     }
@@ -235,6 +240,7 @@ class HaViewModel(
                 tokenDraft = "",
                 statusMessage = Status.Cleared,
             )
+            (context.applicationContext as IcyPowerApp).refreshHaClient()
             context.findActivity()?.recreate()
         }
     }
