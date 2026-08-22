@@ -1,5 +1,8 @@
 package com.kap1bala.icypower.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,6 +26,9 @@ import com.kap1bala.icypower.ui.settings.SettingsScreen
  * pattern — each child screen renders its own TopAppBar with a back button,
  * wired to `navController.popBackStack()` via the `onBack` callbacks.
  */
+
+/** Nav cross-fade duration (ms). 120ms ≈ "snappy" — see [IcyPowerNavHost]. */
+private const val FAST_NAV_MS = 120
 @Composable
 fun IcyPowerNavHost(
     navController: NavHostController = rememberNavController(),
@@ -30,6 +36,14 @@ fun IcyPowerNavHost(
     NavHost(
         navController = navController,
         startDestination = Destinations.HOME,
+        // Settings / sub-pages transition via the Material3 default fade
+        // (~220ms) which reads as sluggish when drilling into a form.
+        // Drop it to a snappy 120ms cross-fade — fast enough to feel
+        // instant, still a transition so the destination change is legible.
+        enterTransition = { fadeIn(animationSpec = tween(FAST_NAV_MS)) },
+        exitTransition = { fadeOut(animationSpec = tween(FAST_NAV_MS)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(FAST_NAV_MS)) },
+        popExitTransition = { fadeOut(animationSpec = tween(FAST_NAV_MS)) },
     ) {
         composable(Destinations.HOME) {
             HomeScreen(
