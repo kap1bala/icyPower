@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kap1bala.icypower.IcyPowerApp
 import com.kap1bala.icypower.data.ha.HaClient
+import com.kap1bala.icypower.data.preferences.HaMonitorPreferences
 import com.kap1bala.icypower.data.preferences.HaPreferences
 import com.kap1bala.icypower.data.security.SecureStorage
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,7 @@ class HaViewModel(
     private val prefs: HaPreferences,
     private val secureStorage: SecureStorage,
     private val haClient: HaClient,
+    private val monitorPrefs: HaMonitorPreferences,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HaSettingsState())
@@ -59,10 +61,14 @@ class HaViewModel(
         viewModelScope.launch {
             val savedUrl = prefs.baseUrl.first().orEmpty()
             val savedToken = secureStorage.getToken()?.takeIf { it.isNotEmpty() }
+            val warning = monitorPrefs.warningThreshold.first()
+            val danger = monitorPrefs.dangerThreshold.first()
             _state.value = _state.value.copy(
                 baseUrl = savedUrl,
                 tokenDraft = savedToken.orEmpty(),
                 savedToken = savedToken,
+                warningThreshold = warning,
+                dangerThreshold = danger,
             )
         }
     }
@@ -77,6 +83,38 @@ class HaViewModel(
 
     fun onToggleShowToken() {
         _state.value = _state.value.copy(showToken = !_state.value.showToken)
+    }
+
+    /**
+     * Move the "中电量（预警）" threshold. Enforces `danger < warning`
+     * by nudging [dangerThreshold] down if the user slides warning below it.
+     */
+    fun onWarningThresholdChange(value: Int) {
+        val clamped = value.coerceIn(MIN_THRESHOLD, MAX_THRESHOLD)
+        val s = _state.value
+        _state.value = s.copy(
+            warningThreshold = clamped,
+            dangerThreshold = if (s.dangerThreshold >= clamped)
+                (clamped - 1).coerceAtLeast(MIN_THRESHOLD)
+            else
+                s.dangerThreshold,
+        )
+    }
+
+    /**
+     * Move the "低电量（危险）" threshold. Enforces `danger < warning`
+     * by nudging [warningThreshold] up if the user slides danger above it.
+     */
+    fun onDangerThresholdChange(value: Int) {
+        val clamped = value.coerceIn(MIN_THRESHOLD, MAX_THRESHOLD)
+        val s = _state.value
+        _state.value = s.copy(
+            dangerThreshold = clamped,
+            warningThreshold = if (s.warningThreshold <= clamped)
+                (clamped + 1).coerceAtMost(MAX_THRESHOLD)
+            else
+                s.warningThreshold,
+        )
     }
 
     /**
@@ -144,6 +182,10 @@ class HaViewModel(
             if (token.isNotEmpty() && token != current.savedToken) {
                 secureStorage.putToken(token)
             }
+            // Persist the low/mid battery standards alongside the connection
+            // (the sliders guarantee danger < warning, so setThresholds'
+            // require() can't trip).
+            monitorPrefs.setThresholds(current.warningThreshold, current.dangerThreshold)
             _state.value = _state.value.copy(
                 phase = Phase.Idle,
                 savedToken = token.ifEmpty { current.savedToken },
@@ -189,6 +231,11 @@ class HaViewModel(
     }
 
     companion object {
+        const val MIN_THRESHOLD = 1
+        const val MAX_THRESHOLD = 100
+        const val DEFAULT_WARNING = 20
+        const val DEFAULT_DANGER = 10
+
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as IcyPowerApp
@@ -196,6 +243,7 @@ class HaViewModel(
                     prefs = app.haPreferences,
                     secureStorage = app.secureStorage,
                     haClient = app.haClient,
+                    monitorPrefs = app.haMonitorPreferences,
                 )
             }
         }
@@ -214,6 +262,10 @@ data class HaSettingsState(
     val errorReason: String? = null,
     /** The token as last written to disk — used to skip redundant writes. */
     val savedToken: String? = null,
+    /** Battery level below this → Warning (yellow). Configurable on-screen. */
+    val warningThreshold: Int = HaViewModel.DEFAULT_WARNING,
+    /** Battery level below this → Danger (red). Configurable on-screen. */
+    val dangerThreshold: Int = HaViewModel.DEFAULT_DANGER,
 )
 
 enum class Phase { Idle, Testing, Saving }

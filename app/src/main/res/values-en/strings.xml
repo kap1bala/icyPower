@@ -85,6 +85,10 @@
     <string name="ha_token_copied">Copied to clipboard</string>
     <string name="ha_button_clear_token">Clear token only</string>
     <string name="ha_status_token_cleared">Token cleared</string>
+    <string name="ha_threshold_section">Battery levels</string>
+    <string name="ha_threshold_hint">Below warning tints amber, below danger tints red — drives HA badge &amp; progress-bar colours</string>
+    <string name="ha_threshold_warning">Warning level</string>
+    <string name="ha_threshold_danger">Danger level</string>
     <string name="cd_ha_test">Test connection</string>
 
     <!-- Appearance -->

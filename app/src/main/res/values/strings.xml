@@ -85,6 +85,10 @@
     <string name="ha_token_copied">已复制到剪贴板</string>
     <string name="ha_button_clear_token">仅清除 Token</string>
     <string name="ha_status_token_cleared">Token 已清除</string>
+    <string name="ha_threshold_section">电量标准</string>
+    <string name="ha_threshold_hint">低于预警标黄、低于危险标红，控制 HA 设备徽标与进度条颜色</string>
+    <string name="ha_threshold_warning">中电量（预警）</string>
+    <string name="ha_threshold_danger">低电量（危险）</string>
     <string name="cd_ha_test">测试连接</string>
 
     <!-- 语言 -->

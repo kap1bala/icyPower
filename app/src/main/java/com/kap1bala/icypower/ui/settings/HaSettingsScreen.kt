@@ -21,6 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -38,12 +40,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlin.math.roundToInt
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kap1bala.icypower.R
 import com.kap1bala.icypower.ui.theme.LocalDanger
 import com.kap1bala.icypower.ui.theme.LocalRadius
 import com.kap1bala.icypower.ui.theme.LocalSpacing
 import com.kap1bala.icypower.ui.theme.LocalSuccess
+import com.kap1bala.icypower.ui.theme.LocalWarning
 
 /**
  * Home Assistant settings (route /settings/ha).
@@ -197,6 +201,75 @@ fun HaSettingsScreen(
                     modifier = Modifier.padding(top = spacing.xxs),
                 )
             }
+
+            // ── 电量标准（低 / 中 / 高）──
+            // Decoupled config for the battery-level buckets. These drive
+            // the HA-device severity (badge + progress bar colour) in
+            // ui/ha/HaViewModel and ui/ha/HaDeviceSelectionViewModel —
+            // both read HaMonitorPreferences on bootstrap.
+            Text(
+                text = stringResource(R.string.ha_threshold_section),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = spacing.md),
+            )
+            Text(
+                text = stringResource(R.string.ha_threshold_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(R.string.ha_threshold_warning),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = "${state.warningThreshold}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalWarning.current,
+                )
+            }
+            Slider(
+                value = state.warningThreshold.toFloat(),
+                onValueChange = { viewModel.onWarningThresholdChange(it.roundToInt()) },
+                valueRange = HaViewModel.MIN_THRESHOLD.toFloat()..HaViewModel.MAX_THRESHOLD.toFloat(),
+                colors = SliderDefaults.colors(
+                    thumbColor = LocalWarning.current,
+                    activeTrackColor = LocalWarning.current,
+                    inactiveTrackColor = LocalWarning.current.copy(alpha = 0.12f),
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(R.string.ha_threshold_danger),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = "${state.dangerThreshold}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalDanger.current,
+                )
+            }
+            Slider(
+                value = state.dangerThreshold.toFloat(),
+                onValueChange = { viewModel.onDangerThresholdChange(it.roundToInt()) },
+                valueRange = HaViewModel.MIN_THRESHOLD.toFloat()..HaViewModel.MAX_THRESHOLD.toFloat(),
+                colors = SliderDefaults.colors(
+                    thumbColor = LocalDanger.current,
+                    activeTrackColor = LocalDanger.current,
+                    inactiveTrackColor = LocalDanger.current.copy(alpha = 0.12f),
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             // Save (primary)
             Button(
