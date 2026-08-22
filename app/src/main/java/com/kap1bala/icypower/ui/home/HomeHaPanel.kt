@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,6 +51,7 @@ import com.kap1bala.icypower.ui.theme.LocalDanger
 import com.kap1bala.icypower.ui.theme.LocalDangerSoft
 import com.kap1bala.icypower.ui.theme.LocalRadius
 import com.kap1bala.icypower.ui.theme.LocalSpacing
+import com.kap1bala.icypower.ui.theme.LocalSuccess
 import com.kap1bala.icypower.ui.theme.LocalWarning
 import com.kap1bala.icypower.ui.theme.LocalWarningSoft
 import java.time.Duration
@@ -327,6 +330,25 @@ private fun HomeHaCard(card: HaDeviceCard) {
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            // Battery progress bar — colour follows the same severity
+            // scale as the badge (高→绿 / 中→黄 / 低→红) so the two
+            // always agree at a glance (feat.md §5.9 colour + shape).
+            val progressColor = when (card.severity) {
+                OverdueSeverity.Danger -> LocalDanger.current
+                OverdueSeverity.Warning -> LocalWarning.current
+                OverdueSeverity.None -> LocalSuccess.current
+            }
+            LinearProgressIndicator(
+                progress = { (card.batteryPercent / 100f).coerceIn(0f, 1f) },
+                color = progressColor,
+                trackColor = progressColor.copy(alpha = 0.12f),
+                // Butt caps + no stop dot: the Material3 default paints a
+                // round cap (and a leading stop dot) that at 100% reads as
+                // a stray green dot at the end of the bar.
+                strokeCap = StrokeCap.Butt,
+                drawStopIndicator = {},
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
