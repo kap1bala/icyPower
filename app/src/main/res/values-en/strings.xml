@@ -73,6 +73,8 @@
     <string name="ha_field_token_placeholder">32+ character token</string>
     <string name="ha_button_test">Test connection</string>
     <string name="ha_button_save">Save</string>
+    <string name="ha_button_saving">Saving…</string>
+    <string name="ha_status_saved">Settings saved</string>
     <string name="ha_button_clear">Clear credentials</string>
     <string name="ha_status_testing">Testing…</string>
     <string name="ha_status_saving">Saving…</string>
@@ -141,6 +143,8 @@
     <!-- args: lastChargedAt(String) -->
     <string name="cycle_field_last_charged">Last charged: %1$s</string>
     <string name="cycle_save">Save</string>
+    <string name="cycle_saving">Saving…</string>
+    <string name="cycle_saved_toast">Device saved</string>
     <string name="cycle_delete_confirm_title">Delete this device?</string>
     <string name="cycle_delete_confirm_body">This cannot be undone — the device and its charging history will be removed.</string>
     <string name="cycle_delete">Delete</string>

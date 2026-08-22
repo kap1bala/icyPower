@@ -73,6 +73,8 @@
     <string name="ha_field_token_placeholder">32+ 位 token</string>
     <string name="ha_button_test">测试连接</string>
     <string name="ha_button_save">保存</string>
+    <string name="ha_button_saving">保存中…</string>
+    <string name="ha_status_saved">设置已保存</string>
     <string name="ha_button_clear">清空所有凭证</string>
     <string name="ha_status_testing">正在测试…</string>
     <string name="ha_status_saving">正在保存…</string>
@@ -141,6 +143,8 @@
     <!-- args: lastChargedAt(String) -->
     <string name="cycle_field_last_charged">上次充电：%1$s</string>
     <string name="cycle_save">保存</string>
+    <string name="cycle_saving">保存中…</string>
+    <string name="cycle_saved_toast">设备已保存</string>
     <string name="cycle_delete_confirm_title">删除该设备？</string>
     <string name="cycle_delete_confirm_body">删除后无法恢复，此设备的充电历史也会一起清空。</string>
     <string name="cycle_delete">删除</string>

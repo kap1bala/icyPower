@@ -3,12 +3,14 @@ package com.kap1bala.icypower.ui.settings
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kap1bala.icypower.IcyPowerApp
+import com.kap1bala.icypower.R
 import com.kap1bala.icypower.data.ha.HaClient
 import com.kap1bala.icypower.data.preferences.HaMonitorPreferences
 import com.kap1bala.icypower.data.preferences.HaPreferences
@@ -190,6 +192,13 @@ class HaViewModel(
                 phase = Phase.Idle,
                 savedToken = token.ifEmpty { current.savedToken },
             )
+            // Confirm the save even though we immediately recreate() —
+            // Toast is Activity-independent so it survives the restart.
+            Toast.makeText(
+                context,
+                context.getString(R.string.ha_status_saved),
+                Toast.LENGTH_SHORT,
+            ).show()
             context.findActivity()?.recreate()
         }
     }

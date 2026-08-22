@@ -278,7 +278,12 @@ fun HaSettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.small,
             ) {
-                Text(stringResource(R.string.ha_button_save))
+                Text(
+                    stringResource(
+                        if (state.phase == Phase.Saving) R.string.ha_button_saving
+                        else R.string.ha_button_save,
+                    ),
+                )
             }
 
             // Clear token only (keep the URL) — shown only when a token is
