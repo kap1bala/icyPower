@@ -26,15 +26,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,8 +38,6 @@ import com.kap1bala.icypower.R
 import com.kap1bala.icypower.data.cycle.CycleDeviceState
 import com.kap1bala.icypower.data.cycle.OverdueSeverity
 import com.kap1bala.icypower.ui.cycle.AllClearEvent
-import com.kap1bala.icypower.ui.cycle.ConfettiOverlay
-import com.kap1bala.icypower.ui.cycle.ConfettiState
 import com.kap1bala.icypower.ui.cycle.CycleDeviceListViewModel
 import com.kap1bala.icypower.ui.cycle.formatDisplayDate
 import com.kap1bala.icypower.ui.cycle.formatRelativeDays
@@ -76,12 +70,13 @@ import com.kap1bala.icypower.ui.theme.LocalWarning
  *     no-op anyway, and the disabled state gives the user immediate
  *     visual feedback that the action is done.
  *
- * All-clear celebration:
+ * All-clear toast:
  *   - When the last overdue device gets [CycleDeviceListViewModel.markCharged],
  *     the view model emits an [AllClearEvent] on a one-shot SharedFlow.
- *     The panel collects that, fires [Toast] and emits a [ConfettiState]
- *     burst. The state survives re-composition and re-emit (the user
- *     might re-open the home tab and trigger again).
+ *     The panel collects that and fires a short [Toast] ("所有设备已充电完成 🎉")
+ *     as a lightweight confirmation. No confetti — the request was to
+ *     remove the particle system (it was janky and didn't read as
+ *     celebratory).
  *
  * Reuses [CycleDeviceListViewModel] (also used by the settings list) so
  * the DataStore-backed list renders identically and stays in sync.
@@ -95,22 +90,8 @@ fun HomeCycleDevicesPanel(
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val spacing = LocalSpacing.current
     val context = LocalContext.current
-    val confetti = remember { ConfettiState() }
-    var confettiSize by remember { mutableStateOf(IntSize.Zero) }
-    // Confetti palette resolved at the Composable scope so emit() can
-    // stay non-Composable. The colors come from antd tokens (LocalSuccess
-    // / LocalWarning) + the project's chart series — all theme-aware so
-    // dark mode flips automatically.
-    val confettiPalette = listOf(
-        LocalSuccess.current,
-        LocalWarning.current,
-        com.kap1bala.icypower.ui.theme.ChartSeries1,
-        com.kap1bala.icypower.ui.theme.ChartSeries2,
-        com.kap1bala.icypower.ui.theme.ChartSeries3,
-        com.kap1bala.icypower.ui.theme.ChartSeries4,
-    )
 
-    // One-shot celebration: AllDevicesCharged → Toast + confetti burst.
+    // One-shot celebration: AllDevicesCharged → Toast.
     LaunchedEffect(viewModel) {
         viewModel.allClearEvents.collect { event ->
             when (event) {
@@ -120,18 +101,6 @@ fun HomeCycleDevicesPanel(
                         context.getString(R.string.cycle_all_clear_toast),
                         Toast.LENGTH_SHORT,
                     ).show()
-                    if (confettiSize != IntSize.Zero) {
-                        confetti.emit(confettiSize, confettiPalette, perSide = 60)
-                    } else {
-                        // Canvas not measured yet (very fast first tap).
-                        // Defer to the next frame when size becomes known;
-                        // simplest: just retry with IntSize.Zero and let
-                        // the user see particles spawn from origin (0,0)
-                        // for one frame, then settle. In practice the
-                        // overlay's first LaunchedEffect pass runs before
-                        // the click handler reaches this branch.
-                        confetti.particles.clear()
-                    }
                 }
             }
         }
@@ -156,7 +125,6 @@ fun HomeCycleDevicesPanel(
                 }
             }
         }
-        ConfettiOverlay(state = confetti, modifier = Modifier.fillMaxSize())
         return
     }
 
@@ -182,14 +150,6 @@ fun HomeCycleDevicesPanel(
                 )
             }
         }
-        // Confetti overlay sits on top of the LazyColumn. The cards
-        // retain input — the overlay has no `pointerInput` modifier, so
-        // taps fall through to the cards beneath.
-        ConfettiOverlay(
-            state = confetti,
-            modifier = Modifier.fillMaxSize(),
-            onSize = { confettiSize = it },
-        )
     }
 }
 
