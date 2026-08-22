@@ -50,13 +50,20 @@ class HaViewModel(
     val state: StateFlow<HaSettingsState> = _state.asStateFlow()
 
     init {
-        // Hydrate the form with the currently-persisted URL. The token is
-        // never re-loaded into the form (security: token stays in
-        // EncryptedSharedPreferences and we never round-trip it back
-        // through Compose state after the user enters it).
+        // Hydrate the form with the currently-persisted URL **and** token.
+        // The token comes back masked (PasswordVisualTransformation) — the
+        // user only sees it unmasked after tapping "显示". Keeping the
+        // value in `tokenDraft` means an unchanged Save won't re-write it
+        // to disk (compare against `savedToken`), and gives us the raw
+        // value for the copy-to-clipboard button.
         viewModelScope.launch {
             val savedUrl = prefs.baseUrl.first().orEmpty()
-            _state.value = _state.value.copy(baseUrl = savedUrl)
+            val savedToken = secureStorage.getToken()?.takeIf { it.isNotEmpty() }
+            _state.value = _state.value.copy(
+                baseUrl = savedUrl,
+                tokenDraft = savedToken.orEmpty(),
+                savedToken = savedToken,
+            )
         }
     }
 
@@ -131,14 +138,36 @@ class HaViewModel(
         viewModelScope.launch {
             prefs.setBaseUrl(current.baseUrl.trim())
             val token = current.tokenDraft.trim()
-            if (token.isNotEmpty()) {
+            // Only re-write the encrypted token when it actually changed
+            // (skipping an unchanged value avoids a pointless KeyStore /
+            // SharedPreferences write on every save).
+            if (token.isNotEmpty() && token != current.savedToken) {
                 secureStorage.putToken(token)
             }
-            // Wipe the draft so it doesn't sit in memory waiting for a
-            // process death / screen rotation.
             _state.value = _state.value.copy(
                 phase = Phase.Idle,
+                savedToken = token.ifEmpty { current.savedToken },
+            )
+            context.findActivity()?.recreate()
+        }
+    }
+
+    /**
+     * Clear **only** the token — leave the URL alone. The user gets a
+     * dedicated "仅清除 Token" button instead of being forced to wipe
+     * the whole connection (URL + token) when they only want to rotate
+     * the credential.
+     */
+    fun clearTokenAndRecreate(context: Context) {
+        _state.value = _state.value.copy(phase = Phase.Saving)
+        viewModelScope.launch {
+            secureStorage.clearToken()
+            _state.value = _state.value.copy(
+                phase = Phase.Idle,
+                savedToken = null,
                 tokenDraft = "",
+                statusMessage = Status.TokenCleared,
+                errorReason = null,
             )
             context.findActivity()?.recreate()
         }
@@ -183,6 +212,8 @@ data class HaSettingsState(
     val statusMessage: Status? = null,
     /** Human-readable explanation of the most recent probe failure (null if not failed). */
     val errorReason: String? = null,
+    /** The token as last written to disk — used to skip redundant writes. */
+    val savedToken: String? = null,
 )
 
 enum class Phase { Idle, Testing, Saving }
@@ -192,7 +223,7 @@ enum class Phase { Idle, Testing, Saving }
  * Distinct from [Phase] which describes *what the system is doing*;
  * [Status] describes *what was just observed*.
  */
-enum class Status { Ok, Failed, Cleared }
+enum class Status { Ok, Failed, Cleared, TokenCleared }
 
 /**
  * Translate a probe failure into a one-liner that's actionable for a

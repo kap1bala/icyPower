@@ -81,6 +81,10 @@
     <string name="ha_toggle_show_token">显示 / 隐藏 token</string>
     <string name="ha_token_show">显示</string>
     <string name="ha_token_hide">隐藏</string>
+    <string name="ha_token_copy">复制</string>
+    <string name="ha_token_copied">已复制到剪贴板</string>
+    <string name="ha_button_clear_token">仅清除 Token</string>
+    <string name="ha_status_token_cleared">Token 已清除</string>
     <string name="cd_ha_test">测试连接</string>
 
     <!-- 语言 -->

@@ -81,6 +81,10 @@
     <string name="ha_toggle_show_token">Show / hide token</string>
     <string name="ha_token_show">Show</string>
     <string name="ha_token_hide">Hide</string>
+    <string name="ha_token_copy">Copy</string>
+    <string name="ha_token_copied">Copied to clipboard</string>
+    <string name="ha_button_clear_token">Clear token only</string>
+    <string name="ha_status_token_cleared">Token cleared</string>
     <string name="cd_ha_test">Test connection</string>
 
     <!-- Appearance -->

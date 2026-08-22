@@ -1,7 +1,9 @@
 package com.kap1bala.icypower.ui.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -24,9 +26,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -128,17 +133,34 @@ fun HaSettingsScreen(
                 else
                     PasswordVisualTransformation(),
                 trailingIcon = {
-                    val description = stringResource(R.string.ha_toggle_show_token)
-                    // material-icons-core doesn't ship Visibility / VisibilityOff;
-                    // we render a text toggle instead — equally accessible, no
-                    // extra dependency.
-                    TextButton(onClick = viewModel::onToggleShowToken) {
-                        Text(
-                            text = if (state.showToken)
-                                stringResource(R.string.ha_token_hide)
-                            else
-                                stringResource(R.string.ha_token_show),
-                        )
+                    val clipboard = LocalClipboardManager.current
+                    // material-icons-core doesn't ship Visibility / VisibilityOff /
+                    // ContentCopy, so we render text actions instead — equally
+                    // accessible, no extra dependency.
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(spacing.xxs),
+                    ) {
+                        if (state.tokenDraft.isNotEmpty()) {
+                            TextButton(onClick = {
+                                clipboard.setText(AnnotatedString(state.tokenDraft))
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.ha_token_copied),
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }) {
+                                Text(stringResource(R.string.ha_token_copy))
+                            }
+                        }
+                        TextButton(onClick = viewModel::onToggleShowToken) {
+                            Text(
+                                text = if (state.showToken)
+                                    stringResource(R.string.ha_token_hide)
+                                else
+                                    stringResource(R.string.ha_token_show),
+                            )
+                        }
                     }
                 },
                 keyboardOptions = KeyboardOptions(
@@ -166,6 +188,7 @@ fun HaSettingsScreen(
                     Status.Failed -> (state.errorReason
                         ?: stringResource(R.string.ha_status_failed)) to LocalDanger.current
                     Status.Cleared -> stringResource(R.string.ha_button_clear) to LocalSuccess.current
+                    Status.TokenCleared -> stringResource(R.string.ha_status_token_cleared) to LocalSuccess.current
                 }
                 Text(
                     text = text,
@@ -185,7 +208,23 @@ fun HaSettingsScreen(
                 Text(stringResource(R.string.ha_button_save))
             }
 
-            // Clear (low-emphasis)
+            // Clear token only (keep the URL) — shown only when a token is
+            // actually saved. Lets the user rotate the credential without
+            // nuking the whole connection.
+            if (state.savedToken != null) {
+                TextButton(
+                    onClick = { viewModel.clearTokenAndRecreate(context) },
+                    enabled = state.phase == Phase.Idle,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.ha_button_clear_token),
+                        color = LocalDanger.current,
+                    )
+                }
+            }
+
+            // Clear everything (low-emphasis, final)
             TextButton(
                 onClick = { viewModel.clearAllAndRecreate(context) },
                 enabled = state.phase == Phase.Idle,
