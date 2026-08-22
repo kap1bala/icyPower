@@ -17,14 +17,20 @@ package com.kap1bala.icypower.data.cycle
  *
  * **Bucket semantics** (intentionally **inclusive** rather than exclusive —
  * `dueTomorrow` ⊂ `dueInNext7` ⊂ `dueInNext30` — so the larger tiles always
- * show ≥ the smaller ones, which reads more naturally):
+ * show ≥ the smaller ones, which reads more naturally).
  *
- * | Field          | Condition on each device (severity == None unless noted)               |
- * | -------------- | --------------------------------------------------------------------- |
- * | overdueToday   | severity ∈ {Warning, Danger}                                          |
- * | dueTomorrow    | cycleDays - daysSinceLastCharge == 1                                  |
- * | dueInNext7     | 0 ≤ (cycleDays - daysSinceLastCharge) ≤ 7                             |
- * | dueInNext30    | 0 ≤ (cycleDays - daysSinceLastCharge) ≤ 30                            |
+ * Bucketing is based on [nextChargeDateEpochDay] — the *calendar day* the
+ * device next crosses its cycle threshold — compared to `today`, **not** on
+ * `daysSinceLastCharge` (a floating-point delta from the current clock).
+ * Using the natural day avoids mis-bucketing a device that crosses its
+ * threshold later *today* (still < 24h away) into "tomorrow":
+ *
+ * | Field          | Condition on each device (severity == None unless noted)         |
+ * | -------------- | --------------------------------------------------------------- |
+ * | overdueToday   | severity ∈ {Warning, Danger}                                    |
+ * | dueTomorrow    | nextChargeDateEpochDay == today + 1                             |
+ * | dueInNext7     | today + 1 ≤ nextChargeDateEpochDay ≤ today + 7                  |
+ * | dueInNext30    | today + 1 ≤ nextChargeDateEpochDay ≤ today + 30                 |
  *
  * Devices with `cycleDays == 0` are always overdue (handled by
  * [CycleDeviceState.from] → Danger), so they appear in [overdueToday] and
@@ -149,16 +155,17 @@ fun computeOverview(
             continue
         }
 
-        val delta = daysUntilDue(state)
-        when (delta) {
-            1L -> dueTomorrow++
-        }
-        if (delta in 0..7) dueInNext7++
-        if (delta in 0..30) dueInNext30++
-
+        // Bucket by the calendar day the device next crosses its cycle
+        // threshold (nextChargeDateEpochDay) — see the class doc for why
+        // this is correct where `daysSinceLastCharge` alone is not.
         val day = nextChargeDateEpochDay(state, today)
-        // Devices with severity == None and delta == 0 also land on today;
-        // they show as upcoming yellow dots alongside any overdue red dots.
+        val ahead = day - today
+        when (ahead) {
+            1L -> dueTomorrow++          // exactly tomorrow
+        }
+        if (ahead in 1L..7L) dueInNext7++
+        if (ahead in 1L..30L) dueInNext30++
+
         val acc = byDay.getOrPut(day) { Acc() }
         acc.upcomingCount++
     }
