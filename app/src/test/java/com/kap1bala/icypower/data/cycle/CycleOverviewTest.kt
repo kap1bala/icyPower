@@ -205,10 +205,16 @@ class CycleOverviewTest {
 
     @Test
     fun daysUntilDue_clockSkewFuture_returnsLargerDelta() {
-        // Clock-skew: lastChargedAt 5 days in the future.
+        // Clock-skew: lastChargedAt 5 days in the future, at the same
+        // wall-clock offset as `now` (noon) so the integer-truncation in
+        // `CycleDeviceState.from` lands exactly on -5. Adding 12h aligns
+        // it with statesOf's "now = today noon" baseline.
         // delta = 30 - (-5) = 35 — future lastChargedAt pushes the next
         // charge even further out, which is the correct behavior.
-        val dev = device(cycleDays = 30, lastChargedAt = atLocalDay(2026, 8, 22))
+        val dev = device(
+            cycleDays = 30,
+            lastChargedAt = atLocalDay(2026, 8, 22) + (12L * 60 * 60 * 1000),
+        )
         val state = statesOf(listOf(dev)).first()
         assertEquals(35L, daysUntilDue(state))
     }

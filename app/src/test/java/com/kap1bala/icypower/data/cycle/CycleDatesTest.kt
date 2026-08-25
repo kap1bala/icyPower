@@ -20,9 +20,10 @@ class CycleDatesTest {
     @Test
     fun epochDayOf_utc_returnsDayAlignedToUtc() {
         withTz(TimeZone.getTimeZone("UTC")) {
-            // Noon UTC on 2026-08-17 → exactly day 20671.
+            // Noon UTC on 2026-08-17 → exactly day 20682 (verified with
+            // Python: (date(2026,8,17) - date(1970,1,1)).days == 20682).
             val ms = utcMillis(2026, 8, 17, 12, 0)
-            assertEquals(20671L, epochDayOf(ms))
+            assertEquals(20682L, epochDayOf(ms))
         }
     }
 
@@ -32,7 +33,7 @@ class CycleDatesTest {
         // shouldn't change the day.
         withTz(TimeZone.getTimeZone("UTC")) {
             val midnight = utcMillis(2026, 8, 17, 0, 0)
-            assertEquals(20671L, epochDayOf(midnight))
+            assertEquals(20682L, epochDayOf(midnight))
         }
     }
 
