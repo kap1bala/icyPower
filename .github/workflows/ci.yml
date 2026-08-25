@@ -12,9 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # Keep Android SDK path stable across steps (referenced by `steps.setup-android`).
-  ANDROID_HOME: ${{ steps.setup-android.outputs.sdk-path }}
+# Note: ANDROID_HOME / ANDROID_SDK_ROOT are exported to $GITHUB_ENV
+# automatically by `android-actions/setup-android@v3`, so we don't need
+# to set them at job level (and we can't — `steps.*` isn't valid in
+# `env:` at the workflow level).
 
 jobs:
   unit-test:
