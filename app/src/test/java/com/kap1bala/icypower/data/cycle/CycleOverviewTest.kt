@@ -38,7 +38,7 @@ class CycleOverviewTest {
     }
 
     private fun device(
-        id: String = "id-$System.nanoTime()",
+        id: String = "id-${System.nanoTime()}",
         name: String = "dev",
         cycleDays: Int,
         lastChargedAt: Long,

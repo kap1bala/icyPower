@@ -61,6 +61,13 @@ class CycleDeviceListViewModel(
         val wasOverdue = devices.value.any { it.severity != OverdueSeverity.None }
         viewModelScope.launch {
             repo.resetLastChargedAt(id)
+            // yield() so the StateFlow's downstream collector has a chance
+            // to transform the freshly-written `devices` upstream emission
+            // before we read `.value` here. Without it, on the same
+            // dispatcher the launch coroutine can resume and read the
+            // pre-reset value, suppressing the all-clear event. See
+            // CycleDeviceListViewModelTest for the regression coverage.
+            kotlinx.coroutines.yield()
             val isOverdueNow = devices.value.any { it.severity != OverdueSeverity.None }
             if (wasOverdue && !isOverdueNow) {
                 _allClearEvents.tryEmit(AllClearEvent.AllDevicesCharged)
